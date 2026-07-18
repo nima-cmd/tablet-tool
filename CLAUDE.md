@@ -94,6 +94,8 @@ web session set up the scaffolding. When the user says "done with X.Y", flip tha
 
 ## Status
 
-Tutorial scaffolding built: `README.md`, `tutorial/` (curriculum + lessons 0.1 and 0.2 written),
-`ledger/index.html`, `src/`. Current lesson: **0.1 — the terminal**. Next lessons to author when
-reached: 0.3–0.5, then M1. See `PLAN.md` and the ledger for milestone status.
+Tutorial fully authored: `README.md`, `ledger/index.html`, `src/`, and **all 26 lessons** written
+across `tutorial/milestone-0-setup` … `milestone-4-polish` (M0 0.1–0.5, M1 1.1–1.6, M2 2.1–2.7,
+M3 3.1–3.4, M4 4.1–4.4). Current lesson: **0.1 — the terminal**; the rest are ready to work through
+in order. As the user finishes each ("done with X.Y"), flip that lesson's `status` in the ledger's
+`LEDGER` block and advance the next to `current`. See `PLAN.md` and the ledger for milestone status.
