@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tablet Tool — Progress Ledger</title>
+<style>
+  :root{
+    --bg:#0f1216; --panel:#171b22; --panel2:#1d222b; --line:#272d38;
+    --ink:#e7ecf3; --muted:#9aa6b6; --faint:#6b7686;
+    --accent:#5b9dff; --done:#3fbf7f; --current:#ffb02e; --todo:#4a5568;
+    --shadow:0 1px 0 rgba(255,255,255,.03),0 8px 24px rgba(0,0,0,.35);
+  }
+  @media (prefers-color-scheme:light){
+    :root{
+      --bg:#f4f6fa; --panel:#ffffff; --panel2:#f7f9fc; --line:#e4e8ef;
+      --ink:#1a2029; --muted:#5b6675; --faint:#8a94a3;
+      --accent:#2f6fe0; --done:#1f9d63; --current:#c9820a; --todo:#c2c9d4;
+      --shadow:0 1px 0 rgba(0,0,0,.02),0 8px 24px rgba(20,30,50,.08);
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:32px 20px 80px;}
+  .wrap{max-width:860px;margin:0 auto}
+  header{margin-bottom:8px}
+  h1{font-size:24px;margin:0 0 4px;letter-spacing:-.02em}
+  .sub{color:var(--muted);font-size:14px;margin:0}
+  .meta{color:var(--faint);font-size:12.5px;margin-top:10px}
+  .bar{height:10px;border-radius:99px;background:var(--panel2);overflow:hidden;
+    border:1px solid var(--line);margin:18px 0 6px}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--done));
+    border-radius:99px;transition:width .4s ease}
+  .barlabel{color:var(--muted);font-size:12.5px;margin-bottom:26px}
+  .m{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:16px 18px;margin:14px 0;box-shadow:var(--shadow)}
+  .m.active{border-color:color-mix(in srgb,var(--current) 55%,var(--line))}
+  .mhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .mid{font-size:12px;font-weight:700;color:var(--faint);letter-spacing:.08em}
+  .mtitle{font-size:17px;font-weight:650;margin:0;letter-spacing:-.01em}
+  .mgoal{color:var(--muted);font-size:13.5px;margin:4px 0 12px}
+  .mcount{color:var(--faint);font-size:12px;margin-left:auto}
+  ul{list-style:none;margin:0;padding:0}
+  li{display:flex;align-items:flex-start;gap:11px;padding:8px 10px;border-radius:9px}
+  li.current{background:color-mix(in srgb,var(--current) 12%,transparent)}
+  .dot{flex:0 0 auto;width:18px;height:18px;border-radius:50%;margin-top:2px;
+    border:2px solid var(--todo);position:relative}
+  .done .dot{background:var(--done);border-color:var(--done)}
+  .done .dot::after{content:"";position:absolute;left:5px;top:1.5px;width:4px;height:8px;
+    border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+  .current .dot{border-color:var(--current);background:color-mix(in srgb,var(--current) 25%,transparent)}
+  .current .dot::after{content:"";position:absolute;left:4px;top:4px;width:6px;height:6px;
+    border-radius:50%;background:var(--current)}
+  .lz{flex:1 1 auto;min-width:0}
+  .lid{font-variant-numeric:tabular-nums;color:var(--faint);font-size:12.5px;
+    margin-right:7px;font-weight:600}
+  .ltitle{font-size:14.5px}
+  .done .ltitle{color:var(--muted)}
+  .lnote{color:var(--faint);font-size:12.5px;margin-top:2px;font-style:italic}
+  .pill{flex:0 0 auto;font-size:10.5px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;padding:3px 8px;border-radius:99px;margin-top:1px}
+  .current .pill{background:var(--current);color:#1a1206}
+  .done .pill{background:color-mix(in srgb,var(--done) 20%,transparent);color:var(--done)}
+  .todo .pill{background:var(--panel2);color:var(--faint);border:1px solid var(--line)}
+  footer{color:var(--faint);font-size:12px;margin-top:34px;text-align:center;line-height:1.7}
+  code{background:var(--panel2);border:1px solid var(--line);border-radius:5px;
+    padding:1px 5px;font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🖊️ Tablet Tool — Progress Ledger</h1>
+    <p class="sub">Building an XP-Pen shortcut app from scratch, one tiny piece at a time.</p>
+    <p class="meta" id="meta"></p>
+  </header>
+  <div class="bar"><i id="fill"></i></div>
+  <p class="barlabel" id="barlabel"></p>
+  <div id="milestones"></div>
+  <footer>
+    Open this file in your browser to see progress. Claude updates the
+    <code>LEDGER</code> data block below as you finish each lesson.
+  </footer>
+</div>
+
+<script>
+/* ============================================================================
+   LEDGER — the single source of truth for progress.
+   Claude edits ONLY this block (small diffs = cheap updates). Then reload.
+   status per lesson: "done" | "current" | "todo"
+   ==========================================================================*/
+const LEDGER = {
+  updated: "2026-07-18",
+  now: "Lesson 0.1 — meet the terminal",
+  milestones: [
+    { id:"M0", title:"Foundations & Setup",
+      goal:"Get comfortable with the terminal and Python, and install our two tools.",
+      lessons:[
+        { id:"0.1", title:"The terminal — your control panel", status:"current" },
+        { id:"0.2", title:"Python: the REPL and your first script", status:"todo" },
+        { id:"0.3", title:"Install our two tools (evdev + xdotool)", status:"todo" },
+        { id:"0.4", title:"Join the input group (read the tablet, no sudo)", status:"todo" },
+        { id:"0.5", title:"Smoke test — prove the tools work", status:"todo" },
+      ]},
+    { id:"M1", title:"Detect button presses",
+      goal:"Open the tablet's Pad and print which express key you pressed.",
+      lessons:[
+        { id:"1.1", title:"What is an input device?", status:"todo" },
+        { id:"1.2", title:"List every input device with evdev", status:"todo" },
+        { id:"1.3", title:"Find & open the tablet's Pad", status:"todo" },
+        { id:"1.4", title:"The event loop — print raw events", status:"todo" },
+        { id:"1.5", title:"Keep only the button presses", status:"todo" },
+        { id:"1.6", title:"Build your key map (physical key → code)", status:"todo" },
+      ]},
+    { id:"M2", title:"Map buttons to shortcuts",
+      goal:"Press a button → fire a real keyboard shortcut via xdotool.",
+      lessons:[
+        { id:"2.1", title:"What is a keystroke? (keys & modifiers)", status:"todo" },
+        { id:"2.2", title:"Drive xdotool by hand", status:"todo" },
+        { id:"2.3", title:"Call xdotool from Python", status:"todo" },
+        { id:"2.4", title:"First shortcut: one button → one keystroke", status:"todo" },
+        { id:"2.5", title:"A dictionary of shortcuts", status:"todo" },
+        { id:"2.6", title:"Move shortcuts into a config file", status:"todo" },
+        { id:"2.7", title:"Press vs release — no double-fire", status:"todo" },
+      ]},
+    { id:"M3", title:"Pen buttons, monitor mapping, pressure",
+      goal:"Wrap xinput/xsetwacom to control the pen itself.",
+      lessons:[
+        { id:"3.1", title:"Meet xinput & xsetwacom", status:"todo" },
+        { id:"3.2", title:"Pen button shortcuts", status:"todo" },
+        { id:"3.3", title:"Map the pen to one monitor", status:"todo" },
+        { id:"3.4", title:"Shape the pressure curve", status:"todo" },
+      ]},
+    { id:"M4", title:"Polish & real-world use",
+      goal:"Make it a tool you actually run every day.",
+      lessons:[
+        { id:"4.1", title:"A friendly config file", status:"todo" },
+        { id:"4.2", title:"Start automatically on login", status:"todo" },
+        { id:"4.3", title:"A tiny GUI", status:"todo" },
+        { id:"4.4", title:"Per-application profiles", status:"todo" },
+      ]},
+  ]
+};
+/* ==========================  end editable block  ========================== */
+
+(function render(){
+  const all = LEDGER.milestones.flatMap(m => m.lessons);
+  const done = all.filter(l => l.status === "done").length;
+  const pct = Math.round(done / all.length * 100);
+
+  document.getElementById("meta").innerHTML =
+    "Now: <b>" + LEDGER.now + "</b> &nbsp;·&nbsp; updated " + LEDGER.updated;
+  document.getElementById("fill").style.width = pct + "%";
+  document.getElementById("barlabel").textContent =
+    done + " of " + all.length + " lessons complete (" + pct + "%)";
+
+  const STATUS = { done:"Done", current:"Now", todo:"To do" };
+  const host = document.getElementById("milestones");
+  for (const m of LEDGER.milestones){
+    const md = m.lessons.filter(l => l.status === "done").length;
+    const active = m.lessons.some(l => l.status === "current");
+    const el = document.createElement("section");
+    el.className = "m" + (active ? " active" : "");
+    el.innerHTML =
+      '<div class="mhead"><span class="mid">' + m.id + '</span>' +
+      '<h2 class="mtitle">' + m.title + '</h2>' +
+      '<span class="mcount">' + md + '/' + m.lessons.length + '</span></div>' +
+      '<p class="mgoal">' + m.goal + '</p>' +
+      '<ul>' + m.lessons.map(l =>
+        '<li class="' + l.status + '"><span class="dot"></span>' +
+        '<span class="lz"><span class="lid">' + l.id + '</span>' +
+        '<span class="ltitle">' + l.title + '</span>' +
+        (l.note ? '<div class="lnote">' + l.note + '</div>' : '') +
+        '</span><span class="pill">' + STATUS[l.status] + '</span></li>'
+      ).join("") + '</ul>';
+    host.appendChild(el);
+  }
+})();
+</script>
+</body>
+</html>

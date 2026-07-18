@@ -33,4 +33,7 @@ This is cleaner and more capable than the vendor app.
 - `sudo usermod -aG input $USER`  (then re-login — lets the app read the tablet without sudo)
 
 ## Status
-Setup in progress. Next: write M1.
+Tutorial scaffolding built. The milestones above are now taught as bite-sized lessons in
+`tutorial/`, tracked live in `ledger/index.html`. Currently on **Lesson 0.1 (the terminal)** in
+Milestone 0 (Foundations & Setup, which precedes M1 above). See `tutorial/README.md` for the full
+lesson breakdown.

@@ -68,7 +68,32 @@ evdev events is clean and won't double-fire.
 - [ ] **M3 — Pen buttons + pen→monitor mapping + pressure curve** (wrap `xsetwacom`/`xinput`).
 - [ ] **M4 — Polish:** config file, autostart, simple GUI, per-app profiles.
 
+## Tutorial system (how this repo is organized)
+
+This is a **build-your-first-app tutorial**, same spirit as the user's other learning projects.
+Three parts:
+
+- `tutorial/` — the lessons. Milestones broken into **bite-sized micro-lessons** (one tool/idea
+  each). Every lesson has the same shape: 🎯 Goal · 🧠 New idea · 👀 See it · ⌨️ Your turn (hints,
+  not solutions) · ✅ Done when. See `tutorial/README.md` for the full map.
+- `ledger/index.html` — the **living progress ledger** the user opens in a browser. Its data is a
+  single `const LEDGER = {…}` block near the top of the file. **To update progress, edit only that
+  block** (flip a lesson's `status`, bump `updated`/`now`) — small diffs, cheap on tokens. Do NOT
+  regenerate the whole file.
+- `src/` — where the user's code goes. Starts empty; files created lesson by lesson.
+
+### Working rhythm
+The user works lessons in the **VS Code Claude extension** (Claude guides live, user types). This
+web session set up the scaffolding. When the user says "done with X.Y", flip that lesson to
+`done` and the next to `current` in the ledger, and update `now`/`updated`.
+
+### Audience calibration (confirmed)
+- **Experience: new to coding.** Explain every concept from scratch (what a variable is, what the
+  terminal does). Assume nothing.
+- **Lesson size: bite-sized micro-lessons.** One concept, a few lines of code, per lesson.
+
 ## Status
 
-Setup done (folder + plan). Next action: write M1 with the user (they type, Claude guides).
-See `PLAN.md` for the same milestone list.
+Tutorial scaffolding built: `README.md`, `tutorial/` (curriculum + lessons 0.1 and 0.2 written),
+`ledger/index.html`, `src/`. Current lesson: **0.1 — the terminal**. Next lessons to author when
+reached: 0.3–0.5, then M1. See `PLAN.md` and the ledger for milestone status.
