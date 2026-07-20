@@ -1,4 +1,5 @@
 from evdev import InputDevice, list_devices, ecodes
+import subprocess
 
 
 # Physical key -> code (measured on my Deco Pro MW)
@@ -44,6 +45,8 @@ if pad:
     print("Listening... press the Pad's Express keys (Ctrl-C to stop).")
     for event in pad.read_loop():
         if event.type == ecodes.EV_KEY and event.value ==1:
-            print("pressed, code -", event.code)
+            if event.code == 256:
+                subprocess.run(["xdotool", "key", "ctrl+z"])
+                print("fired ctrl+z")
 else:
     print("Could not find the pad. Is the tablet plugged in?")
