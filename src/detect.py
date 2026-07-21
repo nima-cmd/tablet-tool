@@ -33,6 +33,18 @@ KEYS = {
     263: "below_br",
 }
 
+SHORTCUTS = {
+    256: "ctrl+z",
+    257: "ctrl+shift+z",
+    258: "b",
+    259: "e",
+    260: "ctrl+s",
+    261: "ctrl+shift+a",
+    262: "bracketleft",
+    263: "bracketright"
+
+}
+
 pad = None      #Nothing found yet
 for path in list_devices():
     device = InputDevice (path)
@@ -45,8 +57,9 @@ if pad:
     print("Listening... press the Pad's Express keys (Ctrl-C to stop).")
     for event in pad.read_loop():
         if event.type == ecodes.EV_KEY and event.value ==1:
-            if event.code == 256:
-                subprocess.run(["xdotool", "key", "ctrl+z"])
-                print("fired ctrl+z")
+            combo = SHORTCUTS.get(event.code)
+            if combo:
+                subprocess.run(["xdotool","key", combo])
+                print("fired",combo)
 else:
     print("Could not find the pad. Is the tablet plugged in?")
