@@ -33,17 +33,11 @@ KEYS = {
     263: "below_br",
 }
 
-SHORTCUTS = {
-    256: "ctrl+z",
-    257: "ctrl+shift+z",
-    258: "b",
-    259: "e",
-    260: "ctrl+s",
-    261: "ctrl+shift+a",
-    262: "bracketleft",
-    263: "bracketright"
+import json
 
-}
+with open("config.json") as f:
+    raw = json.load(f)
+SHORTCUTS = {int(code): combo for code, combo in raw.items()} #string Keys -> int keys
 
 pad = None      #Nothing found yet
 for path in list_devices():
