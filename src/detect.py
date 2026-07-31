@@ -1,5 +1,7 @@
 from evdev import InputDevice, list_devices, ecodes
 import subprocess
+import json
+import selectors
 
 
 # Physical key -> code (measured on my Deco Pro MW)
@@ -33,27 +35,48 @@ KEYS = {
     263: "below_br",
 }
 
-import json
-
 with open("config.json") as f:
     raw = json.load(f)
 SHORTCUTS = {int(code): combo for code, combo in raw.items()} #string Keys -> int keys
 
+#Find the Pad
 pad = None      #Nothing found yet
 for path in list_devices():
     device = InputDevice (path)
     if "Pad" in device.name:    #finds the pad
         pad = device
 
+#Finds the Pen
+pen = None
+for path in list_devices():
+    device = InputDevice(path)
+    if "Pen" in device.name:
+        pen = device
+
+#Selector (Doorbell) that lets us listen to both devices
+sel = selectors.DefaultSelector()
+sel.register(pad, selectors.EVENT_READ)
+sel.register(pen,selectors.EVENT_READ)
+
+#tells us when pen or pad is detected
 if pad:
     print("found the pad:", pad.name, "at", pad.path)
+if pen:
+    print("found the pen:", pen.name, "at", pen.path)
 
-    print("Listening... press the Pad's Express keys (Ctrl-C to stop).")
-    for event in pad.read_loop():
-        if event.type == ecodes.EV_KEY and event.value ==1:
-            combo = SHORTCUTS.get(event.code)
-            if combo:
-                subprocess.run(["xdotool","key", combo])
-                print("fired",combo)
-else:
-    print("Could not find the pad. Is the tablet plugged in?")
+#replaces if statement with infinite look always 
+#listening for action picking pen or pad No longer stuck on first command
+print("Listening... press a Pad key or click a pen button (Ctrl-C to stop).")
+while True:
+    for key, mask in sel.select():
+        device = key.fileobj
+        for event in device.read():
+            if event.type == ecodes.EV_KEY and event.value == 1:
+                combo = SHORTCUTS.get(event.code)
+                if combo:
+                    if combo.startswith("click:"):
+                        button = combo.split(":", 1)[1]
+                        subprocess.run(["xdotool", "click", button])
+                    else:
+                        subprocess.run(["xdotool", "key", combo])
+                    print("fired", combo)

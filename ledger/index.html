@@ -402,9 +402,14 @@
 
     <h3>Watching multiple devices at once</h3>
     <ul>
-      <li>The problem: <code>read_loop()</code> blocks forever on <i>one</i> device. Stacking two
-        <code>read_loop()</code> calls back-to-back means the first one never returns, so the second
-        block of code never runs.</li>
+      <li><b>Why we got stuck:</b> <code>read_loop()</code> blocks forever on <i>one</i> device — it
+        never naturally returns, it just keeps waiting for that device's next event. Our first
+        attempt had <code>if pen: ... for event in pen.read_loop(): ...</code> written <i>before</i>
+        <code>if pad: ... for event in pad.read_loop(): ...</code>. In practice: pen shortcuts fired
+        correctly, but Pad shortcuts never fired at all — not because the Pad code was broken, but
+        because execution never even reached it. The program got stuck inside the pen's "listen
+        forever" loop, so the pad block below it never got a turn to run. You can't just stack two
+        infinite loops back-to-back and expect both to execute — only the first ever runs.</li>
       <li><code>import selectors</code> — another standard-library module (same category as
         <code>json</code>/<code>subprocess</code>), built for "wait until any of several things is
         ready, then tell me which."</li>
@@ -412,9 +417,27 @@
       <li><code>sel.register(device, selectors.EVENT_READ)</code> — adds a device to the watcher's
         list, and says "notify me when it has something readable." Can register several devices on
         one watcher.</li>
-      <li><code>sel.select()</code> <i>(coming up)</i> — blocks (efficiently) until something
-        registered has data ready, then returns which device(s) triggered — this is how one loop can
-        serve both the Pad and the pen at once instead of two competing infinite loops.</li>
+      <li><code>while True: for key, mask in sel.select():</code> — an intentional infinite loop
+        wrapping <code>sel.select()</code>, since <code>select()</code> only waits for <i>one</i>
+        round of "something's ready" and then returns; wrapping it keeps asking again forever.
+        <code>sel.select()</code> blocks (efficiently) until any registered device has data ready,
+        then returns a list of <code>(key, mask)</code> pairs, one per device that fired.</li>
+      <li><code>key.fileobj</code> — inside that loop, this is how you get back the actual device
+        object (<code>pad</code> or <code>pen</code>, whichever triggered) from the pair
+        <code>sel.select()</code> handed you.</li>
+      <li><code>device.read()</code> — like <code>read_loop()</code>, but drains whatever's
+        currently pending <b>without blocking forever</b>; it returns control once it's done, so the
+        outer <code>while True</code> can loop back to <code>sel.select()</code> and wait for the
+        next thing.</li>
+      <li>This <b>fully replaces</b> having a separate <code>if pad: ... read_loop() ...</code> and
+        <code>if pen: ... read_loop() ...</code> block each with their own copy of the same
+        combo-firing logic — one shared loop now serves whichever device actually fired. The
+        one-time "found the pad"/"found the pen" confirmation prints stay, but move to run once up
+        front, before the loop starts, rather than being tied to either device's own read loop.</li>
+      <li><b>Ordering matters</b>: <code>sel.register(pad, ...)</code> has to come <i>after</i>
+        <code>pad</code> is actually found (assigned from the device-search loop), not before —
+        referencing a variable before it's assigned raises <code>NameError</code>, since Python
+        runs top to bottom.</li>
     </ul>
   </section>
 
@@ -441,7 +464,7 @@
    ==========================================================================*/
 const LEDGER = {
   updated: "2026-07-19",
-  now: "Lesson 3.2 — Pen button shortcuts",
+  now: "Lesson 3.3 — Map the pen to one monitor",
   milestones: [
     { id:"M0", title:"Foundations & Setup",
       goal:"Get comfortable with the terminal and Python, and install our two tools.",
@@ -477,8 +500,8 @@ const LEDGER = {
       goal:"Wrap xinput/xsetwacom to control the pen itself.",
       lessons:[
         { id:"3.1", title:"Meet xinput & xsetwacom", status:"done" },
-        { id:"3.2", title:"Pen button shortcuts", status:"current" },
-        { id:"3.3", title:"Map the pen to one monitor", status:"todo" },
+        { id:"3.2", title:"Pen button shortcuts", status:"done" },
+        { id:"3.3", title:"Map the pen to one monitor", status:"current" },
         { id:"3.4", title:"Shape the pressure curve", status:"todo" },
       ]},
     { id:"M4", title:"Polish & real-world use",
