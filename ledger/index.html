@@ -20,9 +20,23 @@
     }
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    padding:32px 20px 80px;}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+
+  /* ---------- tab chrome (shared shell) ---------- */
+  .tabbar{position:sticky;top:0;z-index:10;display:flex;gap:6px;justify-content:center;
+    padding:14px 20px;background:var(--bg);border-bottom:1px solid var(--line)}
+  .tabbtn{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--muted);
+    font:600 13.5px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    padding:9px 16px;border-radius:99px;cursor:pointer;letter-spacing:.01em}
+  .tabbtn:hover{color:var(--ink)}
+  .tabbtn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .tabpanel{display:none}
+  .tabpanel.active{display:block}
+
+  /* ---------- Progress tab ---------- */
+  #tab-progress{padding:32px 20px 80px}
   .wrap{max-width:860px;margin:0 auto}
   header{margin-bottom:8px}
   h1{font-size:24px;margin:0 0 4px;letter-spacing:-.02em}
@@ -41,9 +55,9 @@
   .mtitle{font-size:17px;font-weight:650;margin:0;letter-spacing:-.01em}
   .mgoal{color:var(--muted);font-size:13.5px;margin:4px 0 12px}
   .mcount{color:var(--faint);font-size:12px;margin-left:auto}
-  ul{list-style:none;margin:0;padding:0}
-  li{display:flex;align-items:flex-start;gap:11px;padding:8px 10px;border-radius:9px}
-  li.current{background:color-mix(in srgb,var(--current) 12%,transparent)}
+  ul.lessons{list-style:none;margin:0;padding:0}
+  ul.lessons li{display:flex;align-items:flex-start;gap:11px;padding:8px 10px;border-radius:9px}
+  ul.lessons li.current{background:color-mix(in srgb,var(--current) 12%,transparent)}
   .dot{flex:0 0 auto;width:18px;height:18px;border-radius:50%;margin-top:2px;
     border:2px solid var(--todo);position:relative}
   .done .dot{background:var(--done);border-color:var(--done)}
@@ -66,9 +80,61 @@
   footer{color:var(--faint);font-size:12px;margin-top:34px;text-align:center;line-height:1.7}
   code{background:var(--panel2);border:1px solid var(--line);border-radius:5px;
     padding:1px 5px;font-size:12.5px}
+
+  /* ---------- Grimoire tab — deliberately its own committed look (aged parchment), ---------- */
+  /* ---------- independent of the app shell's light/dark theme.                     ---------- */
+  #tab-grimoire{
+    --parch:#e9dbb8; --parch2:#f1e6c8; --edge:#8a6d43;
+    --ink2:#3b2b20; --ink2-soft:#5c4632; --accent2:#7a3b2e; --gold:#93712f;
+    background:
+      radial-gradient(ellipse at top left, rgba(255,255,255,.30), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(0,0,0,.12), transparent 55%),
+      var(--parch);
+    color:var(--ink2);
+    font-family:Georgia,"Palatino Linotype","Book Antiqua",serif;
+    padding:40px 16px 90px;
+    min-height:100vh;
+  }
+  .book{max-width:760px;margin:0 auto;background:var(--parch2);
+    border:1px solid var(--edge);border-radius:4px;
+    box-shadow:0 2px 0 rgba(0,0,0,.06), 0 24px 48px rgba(50,35,15,.30);
+    padding:20px 28px 44px}
+  @media (min-width:640px){ .book{padding:44px 56px 56px} }
+  .gtitle{font-size:26px;text-align:center;letter-spacing:.05em;margin:6px 0 4px;
+    color:var(--accent2);font-variant:small-caps}
+  .gsub{text-align:center;color:var(--ink2-soft);font-style:italic;margin:0 0 6px;font-size:14px}
+  .quill{display:block;margin:0 auto 6px;color:var(--accent2)}
+  .divider{display:flex;align-items:center;gap:14px;margin:30px 0;color:var(--gold)}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--edge);opacity:.6}
+  .sigil{flex:0 0 auto;opacity:.85}
+  .chapter h2{font-size:20px;color:var(--accent2);border-bottom:1px solid var(--edge);
+    padding-bottom:7px;margin:0 0 2px;font-weight:600}
+  .chnum{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:2px}
+  .chgoal{color:var(--ink2-soft);font-style:italic;font-size:13.5px;margin:8px 0 16px}
+  .chapter h3{font-size:14.5px;color:var(--ink2-soft);margin:18px 0 7px;
+    font-variant:small-caps;letter-spacing:.04em;border-bottom:1px dotted var(--edge);
+    padding-bottom:3px}
+  .chapter ul{margin:0 0 6px;padding-left:22px}
+  .chapter li{margin:6px 0;line-height:1.6;font-size:14px}
+  .book code{background:rgba(122,59,46,.08);border:1px solid rgba(138,109,67,.4);
+    border-radius:4px;padding:1px 5px;font-size:12.5px;color:var(--accent2)}
+  .toc{list-style:none;padding:0;margin:0 0 4px;display:grid;gap:6px}
+  .toc a{color:var(--ink2);text-decoration:none;font-size:14px;display:flex;gap:8px}
+  .toc a:hover{color:var(--accent2)}
+  .toc .chnum{margin:0;min-width:88px}
+  .footnote{margin-top:36px;text-align:center;font-style:italic;color:var(--ink2-soft);font-size:13px;
+    line-height:1.7}
 </style>
 </head>
 <body>
+
+<div class="tabbar">
+  <button class="tabbtn active" data-tab="progress">📋 Progress</button>
+  <button class="tabbtn" data-tab="grimoire">📜 Grimoire</button>
+</div>
+
+<main id="tab-progress" class="tabpanel active">
 <div class="wrap">
   <header>
     <h1>🖊️ Tablet Tool — Progress Ledger</h1>
@@ -83,6 +149,289 @@
     <code>LEDGER</code> data block below as you finish each lesson.
   </footer>
 </div>
+</main>
+
+<main id="tab-grimoire" class="tabpanel">
+<div class="book">
+  <svg class="quill" width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 32 L26 8 Q30 4 34 8 Q30 12 26 16 Z" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/>
+    <path d="M8 32 L15 29.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M12 30.5 L27 15.5" stroke="currentColor" stroke-width="0.8" opacity=".55"/>
+  </svg>
+  <h1 class="gtitle">The Grimoire</h1>
+  <p class="gsub">A spellbook of commands &amp; concepts, kept in the language of the Tablet Tool itself</p>
+
+  <div class="divider">
+    <svg class="sigil" width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1"/>
+      <path d="M14 2 L14 26 M2 14 L26 14 M5 5 L23 23 M23 5 L5 23" stroke="currentColor" stroke-width=".7" opacity=".7"/>
+    </svg>
+  </div>
+
+  <ul class="toc">
+    <li><a href="#ch1"><span class="chnum">Chapter I</span> Foundations &amp; Setup</a></li>
+    <li><a href="#ch2"><span class="chnum">Chapter II</span> Detecting Button Presses</a></li>
+    <li><a href="#ch3"><span class="chnum">Chapter III</span> Mapping Buttons to Shortcuts</a></li>
+    <li><a href="#ch4"><span class="chnum">Chapter IV</span> Pen, Monitor Mapping, Pressure <em>(in progress)</em></a></li>
+  </ul>
+
+  <div class="divider">
+    <svg class="sigil" width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1"/>
+      <path d="M14 2 L14 26 M2 14 L26 14 M5 5 L23 23 M23 5 L5 23" stroke="currentColor" stroke-width=".7" opacity=".7"/>
+    </svg>
+  </div>
+
+  <section class="chapter" id="ch1">
+    <span class="chnum">Chapter I</span>
+    <h2>Foundations &amp; Setup</h2>
+    <p class="chgoal">Milestone 0 — getting comfortable with the terminal and Python, and installing our two tools.</p>
+
+    <h3>Terminal basics</h3>
+    <ul>
+      <li><code>whoami</code> — prints your username. Proves the basic loop: you type, it answers.</li>
+      <li><code>pwd</code> — "print working directory": which folder the terminal is currently in.</li>
+      <li><code>ls</code> — lists files/folders in the current directory.</li>
+      <li><code>cd &lt;folder&gt;</code> — "change directory." Looks relative to where you currently
+        are — <code>cd tablet-tool</code> fails if you're not already in the folder that contains
+        it; step in one folder at a time, or give a full path like <code>cd Projects/tablet-tool</code>.</li>
+      <li>The prompt itself (e.g. <code>~/Projects/tablet-tool$</code>) always shows your current location.</li>
+    </ul>
+
+    <h3>Python — two ways to run it</h3>
+    <ul>
+      <li><code>python3</code> alone — opens the <b>REPL</b> (Read-Eval-Print-Loop): type one line,
+        see the result immediately. Great for experimenting. Exit with <code>exit()</code> or Ctrl-D.</li>
+      <li><code>python3 src/somefile.py</code> — runs a whole <b>script</b> file at once. This is how
+        real programs live: saved, editable, rerunnable.</li>
+      <li>Rule of thumb: REPL to experiment, script to keep.</li>
+    </ul>
+
+    <h3>Packages &amp; permissions</h3>
+    <ul>
+      <li><code>sudo apt install -y &lt;package&gt;</code> — installs software via Pop!_OS's package
+        manager. <code>sudo</code> = run as administrator, <code>-y</code> = don't ask for confirmation.</li>
+      <li><code>python3-evdev</code> — a <b>library</b> (code you <code>import</code> into your own
+        scripts) for reading input devices.</li>
+      <li><code>xdotool</code> — a <b>program</b> (run by name, or launched from code) for sending
+        keystrokes/clicks.</li>
+      <li><b>Users &amp; groups</b> — hardware devices under <code>/dev/input/</code> are owned by a
+        group (usually <code>input</code>). <code>sudo usermod -aG input $USER</code> adds your
+        account to that group so you can read the tablet without <code>sudo</code>. Requires
+        logging out/in to take effect. Check membership with <code>groups</code>.</li>
+    </ul>
+  </section>
+
+  <div class="divider">
+    <svg class="sigil" width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1"/>
+      <path d="M14 2 L14 26 M2 14 L26 14 M5 5 L23 23 M23 5 L5 23" stroke="currentColor" stroke-width=".7" opacity=".7"/>
+    </svg>
+  </div>
+
+  <section class="chapter" id="ch2">
+    <span class="chnum">Chapter II</span>
+    <h2>Detecting Button Presses</h2>
+    <p class="chgoal">Milestone 1 — opening the tablet's Pad and printing which express key was pressed.</p>
+
+    <h3>Core Python building blocks</h3>
+    <ul>
+      <li><code>import x</code> / <code>from x import y, z</code> — pulls code from a library into
+        your file. <code>from evdev import InputDevice, list_devices</code> grabs only those two
+        named tools out of the whole <code>evdev</code> library.</li>
+      <li><b>Variable</b> — a name holding a value, e.g. <code>path = "/dev/input/event5"</code>.</li>
+      <li><b>List</b> — an ordered bunch of values in <code>[...]</code>. <code>list_devices()</code>
+        returns a list of device path strings.</li>
+      <li><b><code>for</code> loop</b> — <code>for path in list_devices():</code> runs its body once
+        per item, with <code>path</code> set to each one in turn. The loop header <i>is</i> where the
+        variable gets declared and reassigned each pass — there's no separate declaration step in
+        Python.</li>
+      <li><b>Object &amp; dot notation</b> — <code>InputDevice(path)</code> builds an object bundling
+        data about that device; <code>device.name</code> / <code>device.path</code> read specific
+        pieces off it with a dot.</li>
+      <li><b><code>if</code> / string membership</b> — <code>if "Pad" in device.name:</code> is
+        <code>True</code> when that exact substring appears anywhere inside the bigger string.
+        <b>Case-sensitive</b>: <code>"pad"</code> and <code>"Pad"</code> are different checks entirely.</li>
+      <li><b><code>None</code> as a placeholder</b> — <code>pad = None</code> means "nothing found
+        yet"; <code>if pad:</code> is only <code>True</code> once it holds a real object, not
+        <code>None</code>.</li>
+    </ul>
+
+    <h3>evdev specifics</h3>
+    <ul>
+      <li><code>list_devices()</code> — asks the OS for every input device path currently on the machine.</li>
+      <li><code>InputDevice(path)</code> — opens a path as a device object.</li>
+      <li><code>device.name</code> — the human-readable device name (e.g.
+        <code>"Hanvon Ugee Deco Pro MW Pad"</code> over the wireless dongle, or
+        <code>"UGTABLET Deco Pro MW Pad"</code> over USB-C cable — the same physical device can
+        report different names depending on connection mode, which is exactly why matching on a
+        substring like <code>"Pad"</code> is safer than an exact match).</li>
+      <li><code>device.read_loop()</code> — gives an endless stream of events from that one device.
+        Blocks (waits patiently, no CPU burned) until the next event arrives. Runs forever — stop it
+        yourself with Ctrl-C, which raises a <code>KeyboardInterrupt</code> (the traceback you see on
+        Ctrl-C is expected, not a bug).</li>
+      <li><b>Event anatomy</b> — every event has:
+        <ul>
+          <li><b>type</b> — what kind of thing happened. Key ones used so far: <code>EV_KEY</code>
+            (a button/key), <code>EV_REL</code> (relative motion, e.g. the Pad's dial),
+            <code>EV_MSC</code> (misc scan-code metadata, safe to ignore).</li>
+          <li><b>code</b> — which specific button/axis. E.g. <code>256</code>–<code>263</code> for
+            our 8 Pad express keys; <code>320</code> (<code>BTN_TOOL_PEN</code>, proximity, not a
+            real click), <code>330</code> (<code>BTN_TOUCH</code>, the pen tip touching down),
+            <code>331</code>/<code>332</code> (<code>BTN_STYLUS</code>/<code>BTN_STYLUS2</code>, the
+            two real barrel buttons).</li>
+          <li><b>value</b> — for <code>EV_KEY</code>: <code>1</code> = pressed down, <code>0</code> =
+            released, <code>2</code> = held/auto-repeat. For <code>EV_REL</code> (the dial): a
+            movement amount, not a press state at all.</li>
+        </ul>
+      </li>
+      <li><code>from evdev import ecodes</code> + <code>event.type == ecodes.EV_KEY</code> — readable
+        names for these numeric type constants instead of memorizing raw numbers.</li>
+      <li><b>Why filter to <code>value == 1</code></b> — acting only on the press edge guarantees one
+        tap = one action, not a down-and-up pair, not repeats while held.</li>
+      <li><code>evtest</code> (<code>sudo evtest</code>) — a tool that talks directly to the kernel,
+        bypassing our Python entirely. Useful for isolating "is this a code problem or a
+        hardware/driver problem?"</li>
+    </ul>
+
+    <h3>Debugging lessons learned</h3>
+    <ul>
+      <li>Indentation in Python <b>is</b> the block structure, not decoration — dedenting a line by
+        mistake changes what it's nested inside of, silently changing behavior (bit us more than
+        once: firing logic ending up outside the loop it was meant to be inside).</li>
+      <li><code>==</code> (compare) vs <code>=</code> (assign) — the #1 beginner mixup.
+        <code>if event.value == 1</code> asks a question; <code>event.value = 1</code> would
+        (wrongly) assign.</li>
+    </ul>
+  </section>
+
+  <div class="divider">
+    <svg class="sigil" width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1"/>
+      <path d="M14 2 L14 26 M2 14 L26 14 M5 5 L23 23 M23 5 L5 23" stroke="currentColor" stroke-width=".7" opacity=".7"/>
+    </svg>
+  </div>
+
+  <section class="chapter" id="ch3">
+    <span class="chnum">Chapter III</span>
+    <h2>Mapping Buttons to Shortcuts</h2>
+    <p class="chgoal">Milestone 2 — press a button, fire a real keyboard shortcut via xdotool.</p>
+
+    <h3>Keystrokes</h3>
+    <ul>
+      <li>A <b>keystroke</b> = one key. A <b>shortcut</b> = a key plus <b>modifiers</b>
+        (<code>ctrl</code>, <code>shift</code>, <code>alt</code>, <code>super</code>), written with
+        <code>+</code>: <code>ctrl+z</code>, <code>ctrl+shift+z</code>.</li>
+      <li><code>xdotool key &lt;combo&gt;</code> — press-and-release a keyboard shortcut, e.g.
+        <code>xdotool key ctrl+z</code>.</li>
+      <li><code>xdotool click &lt;button&gt;</code> — a mouse click, not a keyboard combo. Button
+        <code>3</code> = right-click.</li>
+      <li><code>xdotool type "&lt;text&gt;"</code> — types literal text.</li>
+      <li>Symbol keys sometimes need their full keysym <b>name</b>, not the raw character:
+        <code>bracketleft</code>/<code>bracketright</code> for <code>[</code>/<code>]</code>;
+        function keys need capital letters, <code>F4</code> not <code>f4</code>. All xdotool key
+        names are case-sensitive.</li>
+      <li>xdotool acts on whatever window currently has <b>focus</b> — same as your real keyboard.
+        <code>sleep N</code> (shell) or <code>time.sleep(N)</code> (Python) buys time to click into
+        the target app before it fires.</li>
+    </ul>
+
+    <h3>Running programs from Python</h3>
+    <ul>
+      <li><code>import subprocess</code> + <code>subprocess.run(["xdotool", "key", "ctrl+z"])</code>
+        — runs another program from inside a script. Always pass a <b>list of separate strings</b>,
+        never one combined string — a list hands each piece straight to the program with no shell
+        re-interpreting spaces/special characters. Safer, avoids a whole category of bugs.</li>
+      <li>A common bug: writing <code>"combo"</code> (a literal string) instead of <code>combo</code>
+        (the variable) — quotes change everything.</li>
+    </ul>
+
+    <h3>Dictionaries &amp; config files</h3>
+    <ul>
+      <li><b>Dictionary</b> — maps a key to a value: <code>SHORTCUTS = {256: "ctrl+z", 257: "b"}</code>.
+        <code>SHORTCUTS.get(event.code)</code> looks up a code and returns its shortcut, or
+        <code>None</code> if it's not in the dict — no crash, just nothing to fire.</li>
+      <li><b>Config vs code</b> — code is the logic (read events, fire keys); config is your personal
+        choices (which key does what). Separating them means rebinding a key needs zero code changes.</li>
+      <li><b>JSON</b> — a text format for data, close to a Python dict but with quoted keys always:
+        <code>{"256": "ctrl+z"}</code>. Read with <code>import json</code> +
+        <code>json.load(f)</code>; the loaded keys come back as <b>strings</b>, not numbers, so they
+        need converting to match <code>event.code</code>.</li>
+      <li><b>Dict comprehension</b> —
+        <code>{int(code): combo for code, combo in raw.items()}</code> builds a new dict by looping
+        over an existing one in one line. <code>.items()</code> gives you (key, value) pairs to loop
+        over. Equivalent to a plain <code>for</code> loop that fills in a dict one entry at a time,
+        just condensed.</li>
+      <li><b>String methods</b>: <code>.startswith("click:")</code> checks a prefix;
+        <code>.split(":", 1)[1]</code> splits on the first <code>:</code> and grabs everything after
+        it — used to support both <code>"ctrl+z"</code> (implicit keyboard shortcut) and
+        <code>"click:3"</code> (explicit mouse click) in the same config file, without rewriting
+        every existing entry when adding a new kind of action.</li>
+    </ul>
+  </section>
+
+  <div class="divider">
+    <svg class="sigil" width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1"/>
+      <path d="M14 2 L14 26 M2 14 L26 14 M5 5 L23 23 M23 5 L5 23" stroke="currentColor" stroke-width=".7" opacity=".7"/>
+    </svg>
+  </div>
+
+  <section class="chapter" id="ch4">
+    <span class="chnum">Chapter IV · in progress</span>
+    <h2>Pen, Monitor Mapping, Pressure</h2>
+    <p class="chgoal">Milestone 3 — wrapping xinput/xsetwacom to control the pen itself.</p>
+
+    <h3>Configuring vs reading a device</h3>
+    <ul>
+      <li><code>xinput list</code> — lists every X11 input device (general purpose).</li>
+      <li><code>xsetwacom --list devices</code> — lists devices specifically on the <i>wacom</i> X
+        driver (which this pen is forced onto via a config rule, since the stock driver misbehaves).</li>
+      <li><code>xsetwacom --list parameters</code> — every pen property you can tune:
+        <code>Area</code>/<code>MapToOutput</code> (monitor mapping, upcoming),
+        <code>PressureCurve</code> (pressure feel, upcoming). We deliberately do <b>not</b> use
+        <code>xsetwacom</code>'s <code>Button</code>/<code>key</code> action for shortcuts — that's
+        the stuck-modifier bug this whole project was built to avoid. Keybindings stay the
+        evdev+xdotool way.</li>
+    </ul>
+
+    <h3>Watching multiple devices at once</h3>
+    <ul>
+      <li>The problem: <code>read_loop()</code> blocks forever on <i>one</i> device. Stacking two
+        <code>read_loop()</code> calls back-to-back means the first one never returns, so the second
+        block of code never runs.</li>
+      <li><code>import selectors</code> — another standard-library module (same category as
+        <code>json</code>/<code>subprocess</code>), built for "wait until any of several things is
+        ready, then tell me which."</li>
+      <li><code>selectors.DefaultSelector()</code> — builds a fresh "watcher" object.</li>
+      <li><code>sel.register(device, selectors.EVENT_READ)</code> — adds a device to the watcher's
+        list, and says "notify me when it has something readable." Can register several devices on
+        one watcher.</li>
+      <li><code>sel.select()</code> <i>(coming up)</i> — blocks (efficiently) until something
+        registered has data ready, then returns which device(s) triggered — this is how one loop can
+        serve both the Pad and the pen at once instead of two competing infinite loops.</li>
+    </ul>
+  </section>
+
+  <div class="divider">
+    <svg class="sigil" width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1"/>
+      <path d="M14 2 L14 26 M2 14 L26 14 M5 5 L23 23 M23 5 L5 23" stroke="currentColor" stroke-width=".7" opacity=".7"/>
+    </svg>
+  </div>
+
+  <p class="footnote">
+    This grimoire grows with every lesson from here on. Ask Claude to explain any entry further,<br>
+    or to quiz you on a chapter whenever you want a check on retention.
+  </p>
+</div>
+</main>
 
 <script>
 /* ============================================================================
@@ -167,7 +516,7 @@ const LEDGER = {
       '<h2 class="mtitle">' + m.title + '</h2>' +
       '<span class="mcount">' + md + '/' + m.lessons.length + '</span></div>' +
       '<p class="mgoal">' + m.goal + '</p>' +
-      '<ul>' + m.lessons.map(l =>
+      '<ul class="lessons">' + m.lessons.map(l =>
         '<li class="' + l.status + '"><span class="dot"></span>' +
         '<span class="lz"><span class="lid">' + l.id + '</span>' +
         '<span class="ltitle">' + l.title + '</span>' +
@@ -176,6 +525,17 @@ const LEDGER = {
       ).join("") + '</ul>';
     host.appendChild(el);
   }
+})();
+
+/* ---------- tab switching ---------- */
+(function tabs(){
+  const btns = document.querySelectorAll(".tabbtn");
+  btns.forEach(btn => btn.addEventListener("click", () => {
+    btns.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".tabpanel").forEach(p => p.classList.remove("active"));
+    document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+  }));
 })();
 </script>
 </body>

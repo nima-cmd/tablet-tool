@@ -22,6 +22,20 @@ curve, per-application profiles).
   explanations — treat as beginner-friendly until told otherwise.
 - This tool's approach also applies to the user's **Blender/Henwick** and **Godot Frieren-game**
   projects — it's a cross-project pattern of small custom workflow tools.
+- **Grimoire pattern (reuse in other tutorial projects too):** this repo's `ledger/index.html` is a
+  single HTML file with two tabs — a **Progress** tab (the existing `LEDGER` JS data block, unchanged)
+  and a **Grimoire** tab: a parchment-themed, in-world "spellbook" reference of every command/concept
+  taught, organized into chapters that mirror the milestones, written in terms of that project's
+  actual code (not generic docs). Tabs are plain buttons toggling `.tabpanel` visibility via a few
+  lines of JS — no framework. The Grimoire tab intentionally keeps its own fixed aged-paper look
+  (CSS variables scoped under `#tab-grimoire`), independent of the app shell's light/dark theme.
+  Decorative touches (a quill icon, a simple original magic-circle SVG divider between chapters) are
+  hand-drawn inline SVG — never real copyrighted character art (e.g. no actual Frieren artwork).
+  **Update the Grimoire continuously**: add an entry not just when a lesson introduces something new,
+  but whenever the user asks a clarifying question about what they're doing — the grimoire should
+  capture the real questions asked, not just the planned curriculum. When starting the equivalent
+  tutorial system in Blender/Henwick or the Godot Frieren-game project, replicate this same
+  two-tab-ledger structure there.
 
 ## Environment (verified facts)
 
