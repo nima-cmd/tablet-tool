@@ -2,6 +2,8 @@ from evdev import InputDevice, list_devices, ecodes
 import subprocess
 import json
 import selectors
+import map_pen
+
 
 
 # Physical key -> code (measured on my Deco Pro MW)
@@ -37,7 +39,10 @@ KEYS = {
 
 with open("config.json") as f:
     raw = json.load(f)
-SHORTCUTS = {int(code): combo for code, combo in raw.items()} #string Keys -> int keys
+SHORTCUTS = {int(code): combo for code, combo in raw["shortcuts"].items()}
+MONITOR = raw["monitor"]
+
+
 
 #Find the Pad
 pad = None      #Nothing found yet
@@ -63,6 +68,7 @@ if pad:
     print("found the pad:", pad.name, "at", pad.path)
 if pen:
     print("found the pen:", pen.name, "at", pen.path)
+    map_pen.map_to_monitor(pen.name + " stylus", MONITOR)
 
 #replaces if statement with infinite look always 
 #listening for action picking pen or pad No longer stuck on first command

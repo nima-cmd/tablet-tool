@@ -1,13 +1,16 @@
 {
+  "shortcuts": {
     "256": "ctrl+z",
     "257": "ctrl+shift+z",
-    "258": "F4",
+    "258": "b",
     "259": "e",
     "260": "ctrl+s",
     "261": "ctrl+shift+a",
     "262": "bracketleft",
     "263": "bracketright",
-    "332": "click:3"    
+    "332": "click:3"
+  },
+  "monitor": "DP-0"
 }
 
 

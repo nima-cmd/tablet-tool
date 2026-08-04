@@ -439,6 +439,45 @@
         referencing a variable before it's assigned raises <code>NameError</code>, since Python
         runs top to bottom.</li>
     </ul>
+
+    <h3>Mapping the pen to one monitor</h3>
+    <ul>
+      <li><code>xrandr --listmonitors</code> — lists your monitors ("outputs") by name, e.g.
+        <code>DP-0</code>, <code>DP-4</code>. By default the pen's area stretches across the
+        <i>entire</i> desktop, which feels squished and has the wrong aspect ratio.</li>
+      <li><code>xinput map-to-output "&lt;device name&gt;" &lt;output&gt;</code> — confines that
+        device to just one monitor; X11 works out the coordinate math.</li>
+      <li><b>Two different device registries, two different names</b>: the <code>evdev</code> name
+        (what <code>pen.name</code> gives you, from the kernel — e.g.
+        <code>"UGTABLET Deco Pro MW Pen"</code>) is <i>not</i> always identical to the name X11/
+        <code>xinput</code> registers the same physical device under (e.g.
+        <code>"UGTABLET Deco Pro MW Pen stylus"</code> — note the added <code>" stylus"</code>).
+        Substring matching (<code>"Pen" in device.name</code>) works fine across both layers, but an
+        <b>exact</b> name match (like <code>map-to-output</code> needs) must use the exact string
+        from whichever layer you're actually calling into.</li>
+      <li><b>Writing your own importable module</b> — <code>import map_pen</code> works exactly like
+        <code>import json</code>, except <code>map_pen</code> is your own file
+        (<code>src/map_pen.py</code>), not a built-in library. Any <code>.py</code> file can be
+        imported by its filename (minus <code>.py</code>) from another file in the same folder.</li>
+      <li><b>Defining your own function</b> —
+        <code>def map_to_monitor(pen_name, output="DP-0"):</code> bundles reusable logic under a
+        name you call later, the same idea as <code>print()</code> or <code>open()</code> except you
+        wrote it. <code>pen_name</code> and <code>output</code> are <b>parameters</b> — values the
+        caller supplies each time; <code>output="DP-0"</code> gives that parameter a <b>default</b>
+        value, used only if the caller doesn't supply one.</li>
+      <li><b>JSON has no comment syntax at all</b> — not <code>#</code>, not <code>//</code>,
+        nothing. A stray <code>#comment</code> line at the top of a <code>.json</code> file breaks
+        <code>json.load</code> immediately (<code>JSONDecodeError: Expecting value</code>), even
+        though the same habit is totally normal and expected in a <code>.py</code> file.</li>
+      <li><b>Structuring config beyond one flat dict</b> — once you need more than one <i>kind</i>
+        of setting (button shortcuts <i>and</i> a monitor name), nest them under named keys instead
+        of mixing everything into one flat object:
+        <code>{"shortcuts": {"256": "ctrl+z", ...}, "monitor": "DP-0"}</code>. Reach one level deeper
+        when loading: <code>raw["shortcuts"].items()</code> instead of <code>raw.items()</code>.
+        Dictionary/JSON keys are exact, case-sensitive strings — <code>raw["Shortcuts"]</code> and
+        <code>raw["shortcuts"]</code> are different keys, same trap as <code>"Pad"</code> vs.
+        <code>"pad"</code> back in Lesson 1.3.</li>
+    </ul>
   </section>
 
   <div class="divider">
@@ -464,7 +503,7 @@
    ==========================================================================*/
 const LEDGER = {
   updated: "2026-07-19",
-  now: "Lesson 3.3 — Map the pen to one monitor",
+  now: "Lesson 3.4 — Shape the pressure curve",
   milestones: [
     { id:"M0", title:"Foundations & Setup",
       goal:"Get comfortable with the terminal and Python, and install our two tools.",
@@ -501,8 +540,8 @@ const LEDGER = {
       lessons:[
         { id:"3.1", title:"Meet xinput & xsetwacom", status:"done" },
         { id:"3.2", title:"Pen button shortcuts", status:"done" },
-        { id:"3.3", title:"Map the pen to one monitor", status:"current" },
-        { id:"3.4", title:"Shape the pressure curve", status:"todo" },
+        { id:"3.3", title:"Map the pen to one monitor", status:"done" },
+        { id:"3.4", title:"Shape the pressure curve", status:"current" },
       ]},
     { id:"M4", title:"Polish & real-world use",
       goal:"Make it a tool you actually run every day.",
