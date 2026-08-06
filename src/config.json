@@ -10,7 +10,9 @@
     "263": "bracketright",
     "332": "click:3"
   },
-  "monitor": "DP-0"
+  "monitor": "DP-0",
+  "pressure_curve": [0, 0, 100, 100]
+
 }
 
 

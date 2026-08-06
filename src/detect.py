@@ -3,6 +3,7 @@ import subprocess
 import json
 import selectors
 import map_pen
+import pressure
 
 
 
@@ -37,10 +38,12 @@ KEYS = {
     263: "below_br",
 }
 
+#bridges config file to detect
 with open("config.json") as f:
     raw = json.load(f)
 SHORTCUTS = {int(code): combo for code, combo in raw["shortcuts"].items()}
 MONITOR = raw["monitor"]
+PRESSURE_CURVE = raw["pressure_curve"]
 
 
 
@@ -68,7 +71,9 @@ if pad:
     print("found the pad:", pad.name, "at", pad.path)
 if pen:
     print("found the pen:", pen.name, "at", pen.path)
-    map_pen.map_to_monitor(pen.name + " stylus", MONITOR)
+    map_pen.map_to_monitor(pen.name + " stylus", MONITOR) #maps pen to monitor
+    pressure.set_pressure_curve(pen.name + " stylus", PRESSURE_CURVE)
+
 
 #replaces if statement with infinite look always 
 #listening for action picking pen or pad No longer stuck on first command
