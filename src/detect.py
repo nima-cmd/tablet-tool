@@ -5,6 +5,10 @@ import selectors
 import map_pen
 import pressure
 import sys
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 
 
 # Physical key -> code (measured on my Deco Pro MW)
@@ -40,7 +44,7 @@ KEYS = {
 
 #bridges config file to detect
 try:
-    with open("config.json") as f:
+    with open(CONFIG_PATH) as f:
         raw = json.load(f)
 except FileNotFoundError:
     print("No config.json found - copy config.example.json to config.json")

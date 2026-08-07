@@ -573,6 +573,51 @@
       <li>Net effect: a missing or broken <code>config.json</code> now prints one plain, actionable
         sentence and exits cleanly — no wall of red traceback text.</li>
     </ul>
+
+    <h3>Starting automatically on login</h3>
+    <ul>
+      <li><b><code>.desktop</code> files</b> — a plain-text "what to run and what to call it"
+        description. Any file placed in <code>~/.config/autostart/</code> gets read automatically
+        by XFCE at login — nothing to click, no icon involved, it just works by existing in the
+        right folder with the right content:
+        <pre style="white-space:pre-wrap">[Desktop Entry]
+Type=Application
+Name=Tablet Tool
+Exec=/usr/bin/python3 /home/nima-cmd/Projects/tablet-tool/src/detect.py
+X-GNOME-Autostart-enabled=true</pre>
+        <code>Exec</code> must be an absolute path (starts with <code>/</code>) — the same command
+        that would start the app from a terminal, but autostart has no working directory to assume,
+        so a relative one would silently fail to find the program at all.</li>
+      <li><b>A real bug this exposed:</b> running <code>detect.py</code> by its full path while
+        still sitting inside <code>src/</code> looked fine — but that's because the current
+        directory happened to still contain <code>config.json</code>. Testing the exact same command
+        from a <i>different</i> directory (<code>cd ~</code> first) revealed the real problem: a
+        relative <code>open("config.json")</code> only works if you happen to be standing in the
+        right folder when you run it — which autostart never guarantees.</li>
+      <li><b>Finding files relative to your own script, not the current directory:</b>
+        <code>__file__</code> is a built-in variable every script gets, holding the path to itself.
+        <code>os.path.abspath(__file__)</code> makes that path absolute;
+        <code>os.path.dirname(...)</code> strips the filename off, leaving just the containing
+        folder; <code>os.path.join(folder, "config.json")</code> safely glues a folder and filename
+        back into one path (the correct way to build paths, rather than gluing strings by hand).
+        Together: <code>CONFIG_PATH</code> always points at the config file sitting next to
+        <code>detect.py</code>, no matter what directory the script was launched from.</li>
+      <li><code>pgrep -af &lt;name&gt;</code> — lists running processes whose command line matches
+        <code>&lt;name&gt;</code>, with full detail (<code>-a</code>) and their process ID. Used to
+        confirm the autostarted tool is actually running, without needing to have started it
+        yourself.</li>
+      <li><b>Discovered and resolved a real conflict</b>: a pre-existing autostart script
+        (<code>~/.local/bin/tablet-setup.sh</code>, from before this tutorial existed) was resetting
+        the pen to the full desktop on every login — directly undoing Lesson 3.3's
+        <code>map-to-output</code> single-monitor mapping. Its own comment even said
+        <i>"custom mapping will come from the user's own config tool later"</i> — this tool is now
+        that config tool, so the conflicting line was removed from the old script, leaving it to
+        handle only what it still uniquely owns (display layout, waiting for the tablet, disabling
+        express keys at the X level).</li>
+      <li><code>nano &lt;path&gt;</code> — a simple terminal text editor, useful for quick edits to
+        files outside your project folder. <b>Ctrl+O</b> writes/saves, <b>Enter</b> confirms the
+        filename, <b>Ctrl+X</b> exits.</li>
+    </ul>
   </section>
 
   <div class="divider">
@@ -598,7 +643,7 @@
    ==========================================================================*/
 const LEDGER = {
   updated: "2026-07-19",
-  now: "Lesson 4.2 — Start automatically on login",
+  now: "Lesson 4.3 — A tiny GUI",
   milestones: [
     { id:"M0", title:"Foundations & Setup",
       goal:"Get comfortable with the terminal and Python, and install our two tools.",
@@ -642,8 +687,8 @@ const LEDGER = {
       goal:"Make it a tool you actually run every day.",
       lessons:[
         { id:"4.1", title:"A friendly config file", status:"done" },
-        { id:"4.2", title:"Start automatically on login", status:"current" },
-        { id:"4.3", title:"A tiny GUI", status:"todo" },
+        { id:"4.2", title:"Start automatically on login", status:"done" },
+        { id:"4.3", title:"A tiny GUI", status:"current" },
         { id:"4.4", title:"Per-application profiles", status:"todo" },
       ]},
   ]
