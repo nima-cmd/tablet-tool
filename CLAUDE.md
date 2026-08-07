@@ -40,9 +40,14 @@ curve, per-application profiles).
 ## Environment (verified facts)
 
 - **OS:** Pop!_OS 24.04. Two desktop sessions, chosen at the cosmic-greeter login screen:
-  - **COSMIC (Wayland):** daily driver. Everything works EXCEPT tablet pen input (its compositor
-    doesn't route tablet/pressure — immature `tablet-v2` support).
-  - **XFCE (X11):** the drawing/dev environment. Tablet works fully here.
+  - **COSMIC (Wayland):** daily driver — **and, as of 2026-08-07, the chosen environment for
+    drawing too.** The old note here ("compositor doesn't route tablet/pressure") is
+    **OUT OF DATE**. Re-verified in a live COSMIC session on 2026-08-07: `cosmic-comp`
+    implements `zwp_tablet_manager_v2` (+ pad/ring/strip/dial), and XWayland exposes the pen
+    with **Abs Pressure (0–65535)** and **Abs Tilt X/Y**. Pen and pressure work.
+    What does NOT work here: `xsetwacom` (refuses to run under Wayland, so M3's pen config
+    milestone needs rethinking), and the **pad is not forwarded to X11 apps** at all.
+  - **XFCE (X11):** still works fully, still the fallback. Keep the xorg.conf.d rule.
 - **GPU:** NVIDIA RTX 3070. The Claude Desktop app (Electron) freezes on X11 unless launched with
   `--disable-gpu` — already fixed via `~/.local/share/applications/claude-desktop.desktop`.
 - **Tablet:** XP-Pen Deco Pro MW, wireless via 2.4GHz dongle, USB id `28bd:0934`. On X11 it's driven
@@ -60,8 +65,16 @@ stay held down; the keyboard then fires shortcuts on every keypress, and clickin
 Instead:
 
 1. **Read the tablet's raw button events** with Python `evdev` (works in ANY session).
-2. **Send the intended keystroke with `xdotool`** (X11-only) — it presses AND releases modifiers
-   correctly, so no stuck keys.
+2. ~~**Send the intended keystroke with `xdotool`**~~ — **SUPERSEDED 2026-08-07.** `xdotool` is
+   X11-only and is a dead end now that we've moved to COSMIC/Wayland. **Send keystrokes through
+   a `uinput` virtual keyboard instead** — `evdev.UInput` from the same library that already
+   does the reading, so the whole tool becomes one dependency and works in **both** sessions.
+   Verified on 2026-08-07, **no root required**: `/dev/uinput` is `crw-rw-rw-`, and a
+   `UInput({e.EV_KEY: [...]})` device registers with the kernel as `Handlers=kbd` — which is
+   exactly what libinput (and therefore cosmic-comp) enumerates. Press and release are explicit
+   `write()` calls, so the original stuck-modifier bug still can't come back.
+   *(Fallback if uinput ever fails: cosmic-comp also supports `zwp_virtual_keyboard_manager_v1`,
+   so `wtype` would work — but uinput needs no compositor cooperation at all.)*
 
 The pad's express keys are currently disabled at the xsetwacom level (`Button N 0`), so reading raw
 evdev events is clean and won't double-fire.
