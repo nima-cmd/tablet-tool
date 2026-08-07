@@ -40,14 +40,17 @@ curve, per-application profiles).
 ## Environment (verified facts)
 
 - **OS:** Pop!_OS 24.04. Two desktop sessions, chosen at the cosmic-greeter login screen:
-  - **COSMIC (Wayland):** daily driver — **and, as of 2026-08-07, the chosen environment for
-    drawing too.** The old note here ("compositor doesn't route tablet/pressure") is
-    **OUT OF DATE**. Re-verified in a live COSMIC session on 2026-08-07: `cosmic-comp`
-    implements `zwp_tablet_manager_v2` (+ pad/ring/strip/dial), and XWayland exposes the pen
-    with **Abs Pressure (0–65535)** and **Abs Tilt X/Y**. Pen and pressure work.
-    What does NOT work here: `xsetwacom` (refuses to run under Wayland, so M3's pen config
-    milestone needs rethinking), and the **pad is not forwarded to X11 apps** at all.
-  - **XFCE (X11):** still works fully, still the fallback. Keep the xorg.conf.d rule.
+  - **COSMIC (Wayland):** daily driver, but **the tablet cannot draw here** — the original
+    note in this file was right, for a subtler reason than it stated. Re-verified 2026-08-07:
+    `cosmic-comp` *does* advertise `zwp_tablet_manager_v2` and XWayland *does* create stylus
+    proxies with an `Abs Pressure` axis — **but no events are delivered.** Measured in one
+    self-validating window: **36,859 pen events and 8,210 pressure samples reaching the
+    kernel, cursor moved 0 times.** Upstream agrees: tablet support is unimplemented
+    ([cosmic-comp#313](https://github.com/pop-os/cosmic-comp/issues/313), open since Feb
+    2024; UI targeted at epoch 2). **Protocol advertisement ≠ event delivery — don't be
+    fooled by `xinput` output; the only real test is whether the cursor moves.**
+    `xsetwacom` also refuses to run under Wayland.
+  - **XFCE (X11):** the drawing environment. Tablet works fully. Keep the xorg.conf.d rule.
 - **GPU:** NVIDIA RTX 3070. The Claude Desktop app (Electron) freezes on X11 unless launched with
   `--disable-gpu` — already fixed via `~/.local/share/applications/claude-desktop.desktop`.
 - **Tablet:** XP-Pen Deco Pro MW, wireless via 2.4GHz dongle, USB id `28bd:0934`. On X11 it's driven
