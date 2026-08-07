@@ -4,7 +4,7 @@ import json
 import selectors
 import map_pen
 import pressure
-
+import sys
 
 
 # Physical key -> code (measured on my Deco Pro MW)
@@ -39,11 +39,22 @@ KEYS = {
 }
 
 #bridges config file to detect
-with open("config.json") as f:
-    raw = json.load(f)
-SHORTCUTS = {int(code): combo for code, combo in raw["shortcuts"].items()}
-MONITOR = raw["monitor"]
-PRESSURE_CURVE = raw["pressure_curve"]
+try:
+    with open("config.json") as f:
+        raw = json.load(f)
+except FileNotFoundError:
+    print("No config.json found - copy config.example.json to config.json")
+    sys.exit(1)
+except json.JSONDecodeError as e:
+    print("config.json isn't valid JSON:",e)
+    sys.exit(1)
+
+pad_map = {int(code): combo for code, combo in raw.get("pad_shortcuts",{}).items()}
+pen_map = {int(code): combo for code, combo in raw.get("pen_shortcuts",{}).items()}
+SHORTCUTS = pad_map | pen_map
+
+MONITOR = raw.get("monitor")
+PRESSURE_CURVE = raw.get("pressure_curve")
 
 
 

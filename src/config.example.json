@@ -1,5 +1,5 @@
 {
-  "shortcuts": {
+  "pad_shortcuts": {
     "256": "ctrl+z",
     "257": "ctrl+shift+z",
     "258": "b",
@@ -7,12 +7,11 @@
     "260": "ctrl+s",
     "261": "ctrl+shift+a",
     "262": "bracketleft",
-    "263": "bracketright",
+    "263": "bracketright"
+  },
+  "pen_shortcuts": {
     "332": "click:3"
   },
   "monitor": "DP-0",
   "pressure_curve": [0, 0, 100, 100]
-
 }
-
-

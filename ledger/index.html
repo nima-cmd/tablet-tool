@@ -174,6 +174,7 @@
     <li><a href="#ch2"><span class="chnum">Chapter II</span> Detecting Button Presses</a></li>
     <li><a href="#ch3"><span class="chnum">Chapter III</span> Mapping Buttons to Shortcuts</a></li>
     <li><a href="#ch4"><span class="chnum">Chapter IV</span> Pen, Monitor Mapping, Pressure</a></li>
+    <li><a href="#ch5"><span class="chnum">Chapter V</span> Polish &amp; Real-World Use <em>(in progress)</em></a></li>
   </ul>
 
   <div class="divider">
@@ -338,6 +339,14 @@
       <li>xdotool acts on whatever window currently has <b>focus</b> — same as your real keyboard.
         <code>sleep N</code> (shell) or <code>time.sleep(N)</code> (Python) buys time to click into
         the target app before it fires.</li>
+      <li><b>Real gotcha hit while testing:</b> if the terminal running <code>detect.py</code>
+        itself has focus when a <code>ctrl+z</code> shortcut fires, the terminal doesn't send it
+        anywhere — it treats Ctrl+Z as its own built-in <b>suspend</b> signal
+        (<code>SIGTSTP</code>) and pauses <code>detect.py</code> mid-execution, silently, with no
+        error. Symptom: you press the "undo" pad key and nothing prints, ever — the whole script
+        just froze. Fix: run <code>fg</code> in that terminal to resume it, and always click into
+        the actual target app (Krita, etc.) before testing a shortcut, never leave focus sitting on
+        the terminal that's running the tool.</li>
     </ul>
 
     <h3>Running programs from Python</h3>
@@ -514,6 +523,66 @@
     </svg>
   </div>
 
+  <section class="chapter" id="ch5">
+    <span class="chnum">Chapter V · in progress</span>
+    <h2>Polish &amp; Real-World Use</h2>
+    <p class="chgoal">Milestone 4 — turning a working script into a real, everyday tool.</p>
+
+    <h3>A friendly, structured config</h3>
+    <ul>
+      <li><b>Structuring by real domain, not by coincidence</b> — split a flat
+        <code>"shortcuts"</code> dict into <code>pad_shortcuts</code> / <code>pen_shortcuts</code>,
+        named after the actual devices, rather than relying on their code numbers happening not to
+        collide. More honest about what the data means, and safer if that ever changed.</li>
+      <li><code>dict_a | dict_b</code> — merges two dictionaries into one new combined dictionary
+        (right side wins on any duplicate key). Used to recombine <code>pad_shortcuts</code> and
+        <code>pen_shortcuts</code> back into one <code>SHORTCUTS</code> lookup table at runtime,
+        since the firing logic itself doesn't care which device a code came from.</li>
+      <li><b><code>dict["key"]</code> vs. <code>dict.get("key")</code></b> — the "defaulted" idea.
+        Both fetch a value by key, but behave differently when the key is <i>missing</i>:
+        <code>some_dict["key"]</code> crashes with <code>KeyError</code> if it's not there — it
+        assumes the key must exist. <code>some_dict.get("key")</code> instead returns
+        <code>None</code> on a miss; <code>some_dict.get("key", default_value)</code> returns
+        <code>default_value</code> instead of <code>None</code>. Two different uses of this in the
+        app: <code>raw.get("pad_shortcuts", {})</code> treats "no pad shortcuts configured" as a
+        normal state (empty dict) rather than a fatal error when loading config; further down,
+        <code>SHORTCUTS.get(event.code)</code> (no default given, so <code>None</code> by default)
+        lets <code>if combo:</code> cleanly skip any pressed key that simply isn't mapped to
+        anything, rather than crashing on every unmapped press. Same pattern for
+        <code>MONITOR</code>/<code>PRESSURE_CURVE</code>, defaulting to <code>None</code> (meaning
+        "don't set this") if absent from config. The common thread: <code>.get()</code> turns
+        "missing" into a normal, handle-able case instead of a crash — you choose, case by case,
+        what "missing" should actually mean.</li>
+      <li><b><code>try:</code> / <code>except ...:</code></b> — a new control structure: "attempt
+        this code; if it fails in <i>this specific way</i>, run this instead of crashing the whole
+        program." Different from <code>if</code>, which checks a condition <i>before</i> running
+        code — <code>try</code> runs the code regardless and catches specific failures if/when they
+        happen.</li>
+      <li><code>except FileNotFoundError:</code> — catches the specific, named error Python raises
+        when you try to open a file that doesn't exist.</li>
+      <li><code>except json.JSONDecodeError as e:</code> — catches broken/invalid JSON specifically
+        (like a stray comment, or wrong casing). <code>as e</code> captures the actual error object
+        into a variable so you can print its details — <code>e</code> holds the specific reason it
+        failed.</li>
+      <li><code>import sys</code> + <code>sys.exit(1)</code> — <code>sys</code> ("system") holds
+        tools for talking to the Python interpreter itself; <code>sys.exit(1)</code> stops the
+        program immediately, right there, without running anything below it. The <code>1</code>
+        signals "this failed" to the operating system (as opposed to finishing normally, or
+        <code>sys.exit(0)</code>, which both mean success) — mainly useful when other scripts/tools
+        check whether a program succeeded.</li>
+      <li>Net effect: a missing or broken <code>config.json</code> now prints one plain, actionable
+        sentence and exits cleanly — no wall of red traceback text.</li>
+    </ul>
+  </section>
+
+  <div class="divider">
+    <svg class="sigil" width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1"/>
+      <path d="M14 2 L14 26 M2 14 L26 14 M5 5 L23 23 M23 5 L5 23" stroke="currentColor" stroke-width=".7" opacity=".7"/>
+    </svg>
+  </div>
+
   <p class="footnote">
     This grimoire grows with every lesson from here on. Ask Claude to explain any entry further,<br>
     or to quiz you on a chapter whenever you want a check on retention.
@@ -529,7 +598,7 @@
    ==========================================================================*/
 const LEDGER = {
   updated: "2026-07-19",
-  now: "Lesson 4.1 — A friendly config file",
+  now: "Lesson 4.2 — Start automatically on login",
   milestones: [
     { id:"M0", title:"Foundations & Setup",
       goal:"Get comfortable with the terminal and Python, and install our two tools.",
@@ -572,8 +641,8 @@ const LEDGER = {
     { id:"M4", title:"Polish & real-world use",
       goal:"Make it a tool you actually run every day.",
       lessons:[
-        { id:"4.1", title:"A friendly config file", status:"current" },
-        { id:"4.2", title:"Start automatically on login", status:"todo" },
+        { id:"4.1", title:"A friendly config file", status:"done" },
+        { id:"4.2", title:"Start automatically on login", status:"current" },
         { id:"4.3", title:"A tiny GUI", status:"todo" },
         { id:"4.4", title:"Per-application profiles", status:"todo" },
       ]},
