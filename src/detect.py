@@ -6,20 +6,13 @@ import map_pen
 import pressure
 import sys
 import os
+from keymap import KEYS
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 
 
-# Physical key -> code (measured on my Deco Pro MW)
-# above-dial top-left     = 256
-# above-dial top-right    = 257
-# above-dial bottom-left  = 258
-# above-dial bottom-right = 259
-# below-dial top-left     = 260
-# below-dial top-right    = 261
-# below-dial bottom-left  = 262
-# below-dial bottom-right = 263
+
 
 # Shortcut wishlist (Milestone 2 target)
 # above_tl (256) -> ctrl+z         (undo)
@@ -31,16 +24,7 @@ CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 # below_bl (262) -> [              (decrease brush size)
 # below_br (263) -> ]              (increase brush size)
 
-KEYS = {
-    256: "above_tl",
-    257: "above_tr",
-    258: "above_bl",
-    259: "above_br",
-    260: "below_tl",
-    261: "below_tr",
-    262: "below_bl",
-    263: "below_br",
-}
+
 
 #bridges config file to detect
 try:
