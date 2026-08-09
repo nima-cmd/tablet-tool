@@ -674,6 +674,85 @@ X-GNOME-Autostart-enabled=true</pre>
         files outside your project folder. <b>Ctrl+O</b> writes/saves, <b>Enter</b> confirms the
         filename, <b>Ctrl+X</b> exits.</li>
     </ul>
+
+    <h3>A tiny GUI (Tkinter)</h3>
+    <ul>
+      <li><b>GUI vs. everything before this</b> — every earlier script ran top-to-bottom once and
+        exited. A GUI is <b>event-driven</b>: it shows a window and then <i>waits</i> for you
+        (clicks, typing) via its own loop, <code>root.mainloop()</code> — same spirit as
+        <code>read_loop()</code>/<code>sel.select()</code> waiting for tablet events, just waiting
+        for UI events instead.</li>
+      <li><code>import tkinter as tk</code> — Python's built-in GUI toolkit (the <code>python3-tk</code>
+        system package provides supporting files; the library import itself needs no separate pip
+        install). <code>as tk</code> is an <b>alias</b>: bring in the whole library, but let me call
+        it something shorter than typing <code>tkinter.</code> everywhere.</li>
+      <li><code>tk.Tk()</code> builds the actual window object (<code>root</code>); every other
+        widget belongs to it, directly or indirectly. <code>root.title(...)</code> sets the title
+        bar text.</li>
+      <li><b>Widgets &amp; parenting</b> — <code>tk.Label(root, text=...)</code>,
+        <code>tk.Entry(row)</code>, <code>tk.Button(root, ...)</code> all take their <b>parent</b>
+        widget as the first argument (which window/frame they live inside — a containment
+        relationship, like folders holding files). None of them actually appear until you call
+        <code>.pack(...)</code> on them — building a widget and placing it on screen are two
+        separate steps.</li>
+      <li><code>tk.Frame(root)</code> — an invisible container, used purely to group other widgets.
+        <code>.pack(side="left")</code> on widgets inside a frame lines them up horizontally instead
+        of <code>.pack()</code>'s default of stacking downward.</li>
+      <li><code>tk.Entry</code> — an editable text box (vs. <code>Label</code>, which only
+        displays). <code>entry.insert(0, combo)</code> pre-fills it with a starting value (position
+        <code>0</code> = the very start); <code>entry.get()</code> reads whatever's <i>currently</i>
+        typed in it, live, whenever you call it — the two are opposites, one sets the initial value,
+        the other reads the live one.</li>
+      <li><b>Storing widget objects in a dict, not just data</b> — <code>pad_entries[code] = entry</code>
+        stores the actual <code>Entry</code> widget itself as the dict's value (not a string or
+        number), keyed by its code — so later code can find "the box currently showing this code's
+        value" again, by code, without needing a separate list to search through.</li>
+      <li><b>A real copy-paste bug</b>: duplicating the Pad loop's block for Pen and forgetting to
+        rename every reference inside it — <code>pad_entries[code] = entry</code> left unchanged
+        inside the <i>pen</i> loop meant <code>pen_entries</code> stayed empty while
+        <code>pad_entries</code> silently absorbed both. No crash, no visible symptom in the window
+        itself — only would have surfaced later, when Save tried to read from an empty
+        <code>pen_entries</code>.</li>
+      <li><b>Functions can see variables from the surrounding script</b> — <code>def save():</code>
+        takes no parameters at all, yet freely uses <code>pad_entries</code>, <code>pen_entries</code>,
+        <code>raw</code>, <code>CONFIG_PATH</code> — none passed in. A function defined at a
+        script's top level automatically sees every other top-level variable that already exists,
+        unlike <code>map_pen.map_to_monitor(pen_name, output)</code>, which needed real parameters
+        because it lives in a <i>separate file</i> with no automatic access to <code>detect.py</code>'s
+        variables.</li>
+      <li><code>open(CONFIG_PATH, "w")</code> — <b>write mode</b>, the first time we've used
+        anything but the default read mode. Opening a file this way immediately erases its previous
+        contents, ready to be overwritten — different from every earlier <code>open(...)</code>,
+        which only ever read.</li>
+      <li><code>json.dump(raw, f, indent=2)</code> — the reverse of <code>json.load</code>: takes a
+        Python dict and writes it out as JSON text. <code>indent=2</code> keeps the output
+        human-readable (multi-line, indented) instead of one unreadable long line.</li>
+      <li><b>Passing a function without calling it</b> — <code>command=save</code> (no parentheses)
+        hands Tkinter <i>the function itself</i>, to be called later whenever the button is
+        actually clicked. <code>command=save()</code> would instead call it immediately, once,
+        while the window is still being built, and hand Tkinter whatever it returns (<code>None</code>,
+        since <code>save()</code> never <code>return</code>s anything) — the wrong thing entirely.</li>
+      <li><b>Another indentation trap, a chicken-and-egg one this time</b>: pasting
+        <code>tk.Button(..., command=save)</code> <i>inside</i> <code>save()</code>'s own body meant
+        the button would only ever get created by <i>calling</i> <code>save()</code> — but the only
+        thing that could call <code>save()</code> was clicking a button that didn't exist yet
+        because it was never created. Nothing could ever happen. Fix: the button must be created
+        once, at the top level, <i>after</i> <code>save()</code>'s definition — by the time that
+        line runs, <code>save</code> already exists above it, ready to be handed over as a
+        reference.</li>
+      <li><b>Extracting a shared <code>keymap.py</code></b> — rather than duplicating the
+        <code>KEYS</code> dict (physical key → label) into both <code>detect.py</code> and
+        <code>gui.py</code>, it moved into its own tiny file both scripts import from — the same
+        "one copy, reused" pattern as <code>map_pen.py</code>/<code>pressure.py</code>. Also
+        upgraded the labels themselves from raw internal names (<code>"above_tl"</code>) to
+        genuinely readable ones (<code>"Above Top-Left"</code>).</li>
+      <li><b>String keys vs. int keys, yet again</b> — <code>KEYS</code>'s keys are real integers
+        (<code>256</code>), but <code>code</code> coming out of JSON-loaded data is always a
+        <b>string</b> (<code>"256"</code>). <code>KEYS.get(code, code)</code> would silently miss
+        every lookup; it has to be <code>KEYS.get(int(code), code)</code> — the same
+        string-vs-number mismatch from Lesson 4.1's config loading, showing up again in a new
+        place.</li>
+    </ul>
   </section>
 
   <div class="divider">
@@ -699,7 +778,7 @@ X-GNOME-Autostart-enabled=true</pre>
    ==========================================================================*/
 const LEDGER = {
   updated: "2026-07-19",
-  now: "Lesson 4.3 — A tiny GUI",
+  now: "Lesson 4.4 — Per-application profiles",
   milestones: [
     {
       id: "M0",
@@ -857,12 +936,12 @@ const LEDGER = {
         {
           id: "4.3",
           title: "A tiny GUI",
-          status: "current"
+          status: "done"
         },
         {
           id: "4.4",
           title: "Per-application profiles",
-          status: "todo"
+          status: "current"
         }
       ]
     }
