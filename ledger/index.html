@@ -6,17 +6,17 @@
 <title>Tablet Tool — Progress Ledger</title>
 <style>
   :root{
-    --bg:#0f1216; --panel:#171b22; --panel2:#1d222b; --line:#272d38;
-    --ink:#e7ecf3; --muted:#9aa6b6; --faint:#6b7686;
-    --accent:#5b9dff; --done:#3fbf7f; --current:#ffb02e; --todo:#4a5568;
+    --bg:#101316; --panel:#171c21; --panel2:#1c2329; --line:#2a333c;
+    --ink:#eaeff3; --muted:#a7b4bf; --faint:#75828e;
+    --accent:#4a8fae; --done:#3fbf7f; --current:#e0a72e; --todo:#47525c;
     --shadow:0 1px 0 rgba(255,255,255,.03),0 8px 24px rgba(0,0,0,.35);
   }
   @media (prefers-color-scheme:light){
     :root{
-      --bg:#f4f6fa; --panel:#ffffff; --panel2:#f7f9fc; --line:#e4e8ef;
-      --ink:#1a2029; --muted:#5b6675; --faint:#8a94a3;
-      --accent:#2f6fe0; --done:#1f9d63; --current:#c9820a; --todo:#c2c9d4;
-      --shadow:0 1px 0 rgba(0,0,0,.02),0 8px 24px rgba(20,30,50,.08);
+      --bg:#f4f6f7; --panel:#ffffff; --panel2:#f7fafb; --line:#dde5e9;
+      --ink:#1d2429; --muted:#5f6c76; --faint:#8b98a2;
+      --accent:#33768f; --done:#1f9d63; --current:#c9820a; --todo:#ccd6dc;
+      --shadow:0 1px 0 rgba(0,0,0,.02),0 8px 24px rgba(20,40,50,.08);
     }
   }
   *{box-sizing:border-box}
@@ -58,6 +58,52 @@
   ul.lessons{list-style:none;margin:0;padding:0}
   ul.lessons li{display:flex;align-items:flex-start;gap:11px;padding:8px 10px;border-radius:9px}
   ul.lessons li.current{background:color-mix(in srgb,var(--current) 12%,transparent)}
+  ul.lessons li.hasreview{cursor:pointer}
+  ul.lessons li.hasreview:hover{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+  .chev{flex:0 0 auto;color:var(--accent);font-size:12px;margin-top:3px;
+    transition:transform .18s ease;font-weight:700}
+  .chev.open{transform:rotate(90deg)}
+
+  /* ---------- lesson detail panel (the reviewable record) ---------- */
+  .detail{margin:2px 0 14px;padding:18px 20px;border:1px solid var(--line);
+    border-left:3px solid var(--accent);border-radius:0 12px 12px 0;background:var(--panel2)}
+  .detail h4{margin:0 0 3px;font-size:14px;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--accent)}
+  .detail .when{color:var(--faint);font-size:12px;margin:0 0 16px}
+  .detail h5{margin:20px 0 8px;font-size:13.5px;color:var(--ink);
+    border-bottom:1px solid var(--line);padding-bottom:5px}
+  .detail p,.detail li{font-size:13.5px;line-height:1.65;color:var(--muted)}
+  .detail ul{margin:6px 0;padding-left:20px}
+  .detail b{color:var(--ink)}
+  .caveat{background:color-mix(in srgb,var(--current) 13%,transparent);
+    border:1px solid color-mix(in srgb,var(--current) 45%,var(--line));
+    border-radius:9px;padding:12px 15px;margin:0 0 16px}
+  .caveat .ct{color:var(--current);font-weight:700;font-size:12px;letter-spacing:.05em;
+    text-transform:uppercase;display:block;margin-bottom:5px}
+  .caveat p{margin:0;font-size:13px}
+  .fix{background:color-mix(in srgb,var(--accent) 12%,transparent);
+    border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));
+    border-radius:9px;padding:13px 16px;margin:8px 0}
+  .fix p{margin:0 0 8px}.fix p:last-child{margin:0}
+  table.meas{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}
+  table.meas th{text-align:left;color:var(--faint);font-weight:600;font-size:11.5px;
+    letter-spacing:.05em;text-transform:uppercase;padding:5px 8px;border-bottom:1px solid var(--line)}
+  table.meas td{padding:7px 8px;border-bottom:1px solid var(--line);color:var(--muted)}
+  table.meas td.v{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600}
+  .ok{color:var(--done);font-weight:700}.no{color:var(--accent);font-weight:700}
+
+  /* ---------- image + annotation overlay ---------- */
+  .canvasbox{position:relative;margin:10px 0 6px;border:1px solid var(--line);
+    border-radius:9px;overflow:hidden;background:#fff;line-height:0}
+  .canvasbox img{width:100%;display:block}
+  .canvasbox img.ovl{position:absolute;inset:0;opacity:0;transition:opacity .2s ease}
+  .canvasbox.show img.ovl{opacity:1}
+  .ctrls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .tgl{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--muted);
+    font:600 12px/1 inherit;padding:7px 13px;border-radius:99px;cursor:pointer}
+  .tgl:hover{color:var(--ink)}
+  .tgl.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .fnote{color:var(--faint);font-size:11.5px;font-style:italic}
   .dot{flex:0 0 auto;width:18px;height:18px;border-radius:50%;margin-top:2px;
     border:2px solid var(--todo);position:relative}
   .done .dot{background:var(--done);border-color:var(--done)}
@@ -77,12 +123,21 @@
   .current .pill{background:var(--current);color:#1a1206}
   .done .pill{background:color-mix(in srgb,var(--done) 20%,transparent);color:var(--done)}
   .todo .pill{background:var(--panel2);color:var(--faint);border:1px solid var(--line)}
+  /* a thread that runs alongside the spine rather than in sequence */
+  .parallel .dot{border-color:var(--accent);
+    background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--accent) 30%,transparent),
+      color-mix(in srgb,var(--accent) 30%,transparent) 3px,transparent 3px,transparent 6px)}
+  .parallel .pill{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent)}
+  /* gated on something earlier */
+  .locked{opacity:.62}
+  .locked .dot{border-style:dashed}
+  .locked .pill{background:var(--panel2);color:var(--faint);border:1px solid var(--line)}
   footer{color:var(--faint);font-size:12px;margin-top:34px;text-align:center;line-height:1.7}
   code{background:var(--panel2);border:1px solid var(--line);border-radius:5px;
     padding:1px 5px;font-size:12.5px}
 
-  /* ---------- Grimoire tab — deliberately its own committed look (aged parchment), ---------- */
-  /* ---------- independent of the app shell's light/dark theme.                     ---------- */
+  /* ---------- Grimoire tab — its own committed look (aged parchment), ---------- */
+  /* ---------- independent of the app shell's light/dark theme.        ---------- */
   #tab-grimoire{
     --parch:#e9dbb8; --parch2:#f1e6c8; --edge:#8a6d43;
     --ink2:#3b2b20; --ink2-soft:#5c4632; --accent2:#7a3b2e; --gold:#93712f;
@@ -122,7 +177,8 @@
   .toc{list-style:none;padding:0;margin:0 0 4px;display:grid;gap:6px}
   .toc a{color:var(--ink2);text-decoration:none;font-size:14px;display:flex;gap:8px}
   .toc a:hover{color:var(--accent2)}
-  .toc .chnum{margin:0;min-width:88px}
+  .toc .chnum{margin:0;min-width:110px}
+  .unwritten{font-style:italic;color:var(--ink2-soft);font-size:13.5px}
   .footnote{margin-top:36px;text-align:center;font-style:italic;color:var(--ink2-soft);font-size:13px;
     line-height:1.7}
 </style>
@@ -130,7 +186,7 @@
 <body>
 
 <div class="tabbar">
-  <button class="tabbtn active" data-tab="progress">📋 Progress</button>
+  <button class="tabbtn active" data-tab="progress">🎨 Progress</button>
   <button class="tabbtn" data-tab="grimoire">📜 Grimoire</button>
 </div>
 
@@ -645,52 +701,171 @@ const LEDGER = {
   updated: "2026-07-19",
   now: "Lesson 4.3 — A tiny GUI",
   milestones: [
-    { id:"M0", title:"Foundations & Setup",
-      goal:"Get comfortable with the terminal and Python, and install our two tools.",
-      lessons:[
-        { id:"0.1", title:"The terminal — your control panel", status:"done" },
-        { id:"0.2", title:"Python: the REPL and your first script", status:"done" },
-        { id:"0.3", title:"Install our two tools (evdev + xdotool)", status:"done" },
-        { id:"0.4", title:"Join the input group (read the tablet, no sudo)", status:"done" },
-        { id:"0.5", title:"Smoke test — prove the tools work", status:"done" },
-      ]},
-    { id:"M1", title:"Detect button presses",
-      goal:"Open the tablet's Pad and print which express key you pressed.",
-      lessons:[
-        { id:"1.1", title:"What is an input device?", status:"done" },
-        { id:"1.2", title:"List every input device with evdev", status:"done" },
-        { id:"1.3", title:"Find & open the tablet's Pad", status:"done" },
-        { id:"1.4", title:"The event loop — print raw events", status:"done" },
-        { id:"1.5", title:"Keep only the button presses", status:"done" },
-        { id:"1.6", title:"Build your key map (physical key → code)", status:"done" },
-      ]},
-    { id:"M2", title:"Map buttons to shortcuts",
-      goal:"Press a button → fire a real keyboard shortcut via xdotool.",
-      lessons:[
-        { id:"2.1", title:"What is a keystroke? (keys & modifiers)", status:"done" },
-        { id:"2.2", title:"Drive xdotool by hand", status:"done" },
-        { id:"2.3", title:"Call xdotool from Python", status:"done" },
-        { id:"2.4", title:"First shortcut: one button → one keystroke", status:"done" },
-        { id:"2.5", title:"A dictionary of shortcuts", status:"done" },
-        { id:"2.6", title:"Move shortcuts into a config file", status:"done" },
-        { id:"2.7", title:"Press vs release — no double-fire", status:"done" },
-      ]},
-    { id:"M3", title:"Pen buttons, monitor mapping, pressure",
-      goal:"Wrap xinput/xsetwacom to control the pen itself.",
-      lessons:[
-        { id:"3.1", title:"Meet xinput & xsetwacom", status:"done" },
-        { id:"3.2", title:"Pen button shortcuts", status:"done" },
-        { id:"3.3", title:"Map the pen to one monitor", status:"done" },
-        { id:"3.4", title:"Shape the pressure curve", status:"done" },
-      ]},
-    { id:"M4", title:"Polish & real-world use",
-      goal:"Make it a tool you actually run every day.",
-      lessons:[
-        { id:"4.1", title:"A friendly config file", status:"done" },
-        { id:"4.2", title:"Start automatically on login", status:"done" },
-        { id:"4.3", title:"A tiny GUI", status:"current" },
-        { id:"4.4", title:"Per-application profiles", status:"todo" },
-      ]},
+    {
+      id: "M0",
+      title: "Foundations & Setup",
+      goal: "Get comfortable with the terminal and Python, and install our two tools.",
+      lessons: [
+        {
+          id: "0.1",
+          title: "The terminal — your control panel",
+          status: "done"
+        },
+        {
+          id: "0.2",
+          title: "Python: the REPL and your first script",
+          status: "done"
+        },
+        {
+          id: "0.3",
+          title: "Install our two tools (evdev + xdotool)",
+          status: "done"
+        },
+        {
+          id: "0.4",
+          title: "Join the input group (read the tablet, no sudo)",
+          status: "done"
+        },
+        {
+          id: "0.5",
+          title: "Smoke test — prove the tools work",
+          status: "done"
+        }
+      ]
+    },
+    {
+      id: "M1",
+      title: "Detect button presses",
+      goal: "Open the tablet's Pad and print which express key you pressed.",
+      lessons: [
+        {
+          id: "1.1",
+          title: "What is an input device?",
+          status: "done"
+        },
+        {
+          id: "1.2",
+          title: "List every input device with evdev",
+          status: "done"
+        },
+        {
+          id: "1.3",
+          title: "Find & open the tablet's Pad",
+          status: "done"
+        },
+        {
+          id: "1.4",
+          title: "The event loop — print raw events",
+          status: "done"
+        },
+        {
+          id: "1.5",
+          title: "Keep only the button presses",
+          status: "done"
+        },
+        {
+          id: "1.6",
+          title: "Build your key map (physical key → code)",
+          status: "done"
+        }
+      ]
+    },
+    {
+      id: "M2",
+      title: "Map buttons to shortcuts",
+      goal: "Press a button → fire a real keyboard shortcut via xdotool.",
+      lessons: [
+        {
+          id: "2.1",
+          title: "What is a keystroke? (keys & modifiers)",
+          status: "done"
+        },
+        {
+          id: "2.2",
+          title: "Drive xdotool by hand",
+          status: "done"
+        },
+        {
+          id: "2.3",
+          title: "Call xdotool from Python",
+          status: "done"
+        },
+        {
+          id: "2.4",
+          title: "First shortcut: one button → one keystroke",
+          status: "done"
+        },
+        {
+          id: "2.5",
+          title: "A dictionary of shortcuts",
+          status: "done"
+        },
+        {
+          id: "2.6",
+          title: "Move shortcuts into a config file",
+          status: "done"
+        },
+        {
+          id: "2.7",
+          title: "Press vs release — no double-fire",
+          status: "done"
+        }
+      ]
+    },
+    {
+      id: "M3",
+      title: "Pen buttons, monitor mapping, pressure",
+      goal: "Wrap xinput/xsetwacom to control the pen itself.",
+      lessons: [
+        {
+          id: "3.1",
+          title: "Meet xinput & xsetwacom",
+          status: "done"
+        },
+        {
+          id: "3.2",
+          title: "Pen button shortcuts",
+          status: "done"
+        },
+        {
+          id: "3.3",
+          title: "Map the pen to one monitor",
+          status: "done"
+        },
+        {
+          id: "3.4",
+          title: "Shape the pressure curve",
+          status: "done"
+        }
+      ]
+    },
+    {
+      id: "M4",
+      title: "Polish & real-world use",
+      goal: "Make it a tool you actually run every day.",
+      lessons: [
+        {
+          id: "4.1",
+          title: "A friendly config file",
+          status: "done"
+        },
+        {
+          id: "4.2",
+          title: "Start automatically on login",
+          status: "done"
+        },
+        {
+          id: "4.3",
+          title: "A tiny GUI",
+          status: "current"
+        },
+        {
+          id: "4.4",
+          title: "Per-application profiles",
+          status: "todo"
+        }
+      ]
+    }
   ]
 };
 /* ==========================  end editable block  ========================== */
@@ -706,7 +881,8 @@ const LEDGER = {
   document.getElementById("barlabel").textContent =
     done + " of " + all.length + " lessons complete (" + pct + "%)";
 
-  const STATUS = { done:"Done", current:"Now", todo:"To do" };
+  const STATUS = { done:"Done", current:"Now", todo:"To do",
+                   parallel:"Parallel", locked:"Locked" };
   const host = document.getElementById("milestones");
   for (const m of LEDGER.milestones){
     const md = m.lessons.filter(l => l.status === "done").length;
@@ -718,15 +894,87 @@ const LEDGER = {
       '<h2 class="mtitle">' + m.title + '</h2>' +
       '<span class="mcount">' + md + '/' + m.lessons.length + '</span></div>' +
       '<p class="mgoal">' + m.goal + '</p>' +
-      '<ul class="lessons">' + m.lessons.map(l =>
-        '<li class="' + l.status + '"><span class="dot"></span>' +
-        '<span class="lz"><span class="lid">' + l.id + '</span>' +
-        '<span class="ltitle">' + l.title + '</span>' +
-        (l.note ? '<div class="lnote">' + l.note + '</div>' : '') +
-        '</span><span class="pill">' + STATUS[l.status] + '</span></li>'
-      ).join("") + '</ul>';
+      '<ul class="lessons">' + m.lessons.map(l => {
+        const has = !!(l.review || l.work);
+        return '<li class="' + l.status + (has ? ' hasreview' : '') + '"' +
+          (has ? ' data-lesson="' + l.id + '"' : '') + '>' +
+          '<span class="dot"></span>' +
+          '<span class="lz"><span class="lid">' + l.id + '</span>' +
+          '<span class="ltitle">' + l.title + '</span>' +
+          (l.note ? '<div class="lnote">' + l.note + '</div>' : '') +
+          '</span>' +
+          (has ? '<span class="chev">&#9656;</span>' : '') +
+          '<span class="pill">' + STATUS[l.status] + '</span></li>' +
+          (has ? '<li class="detailrow" data-for="' + l.id + '" style="display:none;padding:0">' +
+                 renderDetail(l) + '</li>' : '');
+      }).join("") + '</ul>';
     host.appendChild(el);
   }
+
+  /* ---- the reviewable record for one lesson ---- */
+  function renderDetail(l){
+    const r = l.review, w = l.work;
+    let h = '<div class="detail" style="flex:1 1 auto">';
+    h += '<h4>Review — Lesson ' + l.id + '</h4>';
+    h += '<p class="when">' + (r && r.date ? 'reviewed ' + r.date : 'work in progress') + '</p>';
+
+    if (w && w.image){
+      const base = '../progress/' + w.folder + '/';
+      h += '<div class="ctrls">' +
+           (w.overlay ? '<button class="tgl" data-ovl="' + l.id + '">Show Claude\'s measurements</button>' : '') +
+           '<a class="tgl" href="' + base + w.image + '" target="_blank">Open full size</a>' +
+           '</div>';
+      h += '<div class="canvasbox" id="cv-' + l.id + '">' +
+           '<img src="' + base + w.image + '" alt="lesson ' + l.id + '">' +
+           (w.overlay ? '<img class="ovl" src="' + base + w.overlay + '" alt="annotations">' : '') +
+           '</div>';
+      if (w.caption) h += '<p class="fnote">' + w.caption + '</p>';
+    }
+
+    if (r && r.caveat)
+      h += '<div class="caveat"><span class="ct">⚠ Baseline integrity</span><p>' + r.caveat + '</p></div>';
+
+    if (r && r.measures && r.measures.length){
+      h += '<h5>Measurements</h5><table class="meas"><tr><th>What</th><th>Yours</th><th>Target</th><th>Note</th></tr>';
+      for (const m of r.measures){
+        const mark = m.ok === true ? '<span class="ok">✓</span> ' : m.ok === false ? '<span class="no">✗</span> ' : '';
+        h += '<tr><td>' + m.what + '</td><td class="v">' + m.got + '</td><td class="v">' + m.target +
+             '</td><td>' + mark + (m.note || '') + '</td></tr>';
+      }
+      h += '</table>';
+    }
+
+    if (r && r.working && r.working.length)
+      h += '<h5>What&rsquo;s working</h5><ul>' + r.working.map(x => '<li>' + x + '</li>').join('') + '</ul>';
+
+    if (r && r.fix){
+      h += '<h5>The one fix — ' + r.fix.title + '</h5><div class="fix"><p>' + r.fix.body + '</p>' +
+           (r.fix.drill ? '<p>' + r.fix.drill + '</p>' : '') + '</div>';
+    }
+
+    if (r && r.forward && r.forward.length)
+      h += '<h5>Carried forward</h5><ul>' + r.forward.map(x => '<li>' + x + '</li>').join('') + '</ul>';
+
+    return h + '</div>';
+  }
+
+  /* ---- expand / collapse + overlay toggle ---- */
+  document.addEventListener('click', function(ev){
+    const tgl = ev.target.closest('.tgl[data-ovl]');
+    if (tgl){
+      const box = document.getElementById('cv-' + tgl.dataset.ovl);
+      const on = box.classList.toggle('show');
+      tgl.classList.toggle('on', on);
+      tgl.textContent = on ? "Hide Claude's measurements" : "Show Claude's measurements";
+      return;
+    }
+    const li = ev.target.closest('li.hasreview');
+    if (!li) return;
+    const row = document.querySelector('li.detailrow[data-for="' + li.dataset.lesson + '"]');
+    const open = row.style.display === 'none';
+    row.style.display = open ? 'flex' : 'none';
+    li.querySelector('.chev').classList.toggle('open', open);
+  });
 })();
 
 /* ---------- tab switching ---------- */

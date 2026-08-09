@@ -68,10 +68,13 @@ stay held down; the keyboard then fires shortcuts on every keypress, and clickin
 Instead:
 
 1. **Read the tablet's raw button events** with Python `evdev` (works in ANY session).
-2. ~~**Send the intended keystroke with `xdotool`**~~ — **SUPERSEDED 2026-08-07.** `xdotool` is
-   X11-only and is a dead end now that we've moved to COSMIC/Wayland. **Send keystrokes through
-   a `uinput` virtual keyboard instead** — `evdev.UInput` from the same library that already
-   does the reading, so the whole tool becomes one dependency and works in **both** sessions.
+2. **Send the intended keystroke with `xdotool`** (X11-only) — it presses AND releases modifiers
+   correctly, so no stuck keys. **This is still the shipping design and it works**: drawing
+   happens in XFCE/X11, where xdotool is fine. (An earlier note on 2026-08-07 called this
+   "superseded" while we briefly thought we were moving to COSMIC — we are not. Ignore that.)
+   **Optional future-proofing, not urgent:** `evdev.UInput` can send the same keystrokes via a
+   `uinput` virtual keyboard, using the library that already does the reading — one dependency
+   instead of two, and it works in **both** sessions.
    Verified on 2026-08-07, **no root required**: `/dev/uinput` is `crw-rw-rw-`, and a
    `UInput({e.EV_KEY: [...]})` device registers with the kernel as `Handlers=kbd` — which is
    exactly what libinput (and therefore cosmic-comp) enumerates. Press and release are explicit
@@ -126,6 +129,8 @@ web session set up the scaffolding. When the user says "done with X.Y", flip tha
 
 Tutorial fully authored: `README.md`, `ledger/index.html`, `src/`, and **all 26 lessons** written
 across `tutorial/milestone-0-setup` … `milestone-4-polish` (M0 0.1–0.5, M1 1.1–1.6, M2 2.1–2.7,
-M3 3.1–3.4, M4 4.1–4.4). Current lesson: **0.1 — the terminal**; the rest are ready to work through
+M3 3.1–3.4, M4 4.1–4.4). Current lesson: **4.3 — a tiny GUI** (24 of 26 done; only 4.3 and 4.4
+remain — the tool itself works: pad + pen shortcuts, monitor mapping, pressure curve, config,
+autostart). Lessons are ready to work through
 in order. As the user finishes each ("done with X.Y"), flip that lesson's `status` in the ledger's
 `LEDGER` block and advance the next to `current`. See `PLAN.md` and the ledger for milestone status.
