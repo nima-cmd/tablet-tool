@@ -22,13 +22,35 @@ curve, per-application profiles).
   explanations — treat as beginner-friendly until told otherwise.
 - This tool's approach also applies to the user's **Blender/Henwick** and **Godot Frieren-game**
   projects — it's a cross-project pattern of small custom workflow tools.
+- **Grimoire pattern (reuse in other tutorial projects too):** this repo's `ledger/index.html` is a
+  single HTML file with two tabs — a **Progress** tab (the existing `LEDGER` JS data block, unchanged)
+  and a **Grimoire** tab: a parchment-themed, in-world "spellbook" reference of every command/concept
+  taught, organized into chapters that mirror the milestones, written in terms of that project's
+  actual code (not generic docs). Tabs are plain buttons toggling `.tabpanel` visibility via a few
+  lines of JS — no framework. The Grimoire tab intentionally keeps its own fixed aged-paper look
+  (CSS variables scoped under `#tab-grimoire`), independent of the app shell's light/dark theme.
+  Decorative touches (a quill icon, a simple original magic-circle SVG divider between chapters) are
+  hand-drawn inline SVG — never real copyrighted character art (e.g. no actual Frieren artwork).
+  **Update the Grimoire continuously**: add an entry not just when a lesson introduces something new,
+  but whenever the user asks a clarifying question about what they're doing — the grimoire should
+  capture the real questions asked, not just the planned curriculum. When starting the equivalent
+  tutorial system in Blender/Henwick or the Godot Frieren-game project, replicate this same
+  two-tab-ledger structure there.
 
 ## Environment (verified facts)
 
 - **OS:** Pop!_OS 24.04. Two desktop sessions, chosen at the cosmic-greeter login screen:
-  - **COSMIC (Wayland):** daily driver. Everything works EXCEPT tablet pen input (its compositor
-    doesn't route tablet/pressure — immature `tablet-v2` support).
-  - **XFCE (X11):** the drawing/dev environment. Tablet works fully here.
+  - **COSMIC (Wayland):** daily driver, but **the tablet cannot draw here** — the original
+    note in this file was right, for a subtler reason than it stated. Re-verified 2026-08-07:
+    `cosmic-comp` *does* advertise `zwp_tablet_manager_v2` and XWayland *does* create stylus
+    proxies with an `Abs Pressure` axis — **but no events are delivered.** Measured in one
+    self-validating window: **36,859 pen events and 8,210 pressure samples reaching the
+    kernel, cursor moved 0 times.** Upstream agrees: tablet support is unimplemented
+    ([cosmic-comp#313](https://github.com/pop-os/cosmic-comp/issues/313), open since Feb
+    2024; UI targeted at epoch 2). **Protocol advertisement ≠ event delivery — don't be
+    fooled by `xinput` output; the only real test is whether the cursor moves.**
+    `xsetwacom` also refuses to run under Wayland.
+  - **XFCE (X11):** the drawing environment. Tablet works fully. Keep the xorg.conf.d rule.
 - **GPU:** NVIDIA RTX 3070. The Claude Desktop app (Electron) freezes on X11 unless launched with
   `--disable-gpu` — already fixed via `~/.local/share/applications/claude-desktop.desktop`.
 - **Tablet:** XP-Pen Deco Pro MW, wireless via 2.4GHz dongle, USB id `28bd:0934`. On X11 it's driven
@@ -47,7 +69,18 @@ Instead:
 
 1. **Read the tablet's raw button events** with Python `evdev` (works in ANY session).
 2. **Send the intended keystroke with `xdotool`** (X11-only) — it presses AND releases modifiers
-   correctly, so no stuck keys.
+   correctly, so no stuck keys. **This is still the shipping design and it works**: drawing
+   happens in XFCE/X11, where xdotool is fine. (An earlier note on 2026-08-07 called this
+   "superseded" while we briefly thought we were moving to COSMIC — we are not. Ignore that.)
+   **Optional future-proofing, not urgent:** `evdev.UInput` can send the same keystrokes via a
+   `uinput` virtual keyboard, using the library that already does the reading — one dependency
+   instead of two, and it works in **both** sessions.
+   Verified on 2026-08-07, **no root required**: `/dev/uinput` is `crw-rw-rw-`, and a
+   `UInput({e.EV_KEY: [...]})` device registers with the kernel as `Handlers=kbd` — which is
+   exactly what libinput (and therefore cosmic-comp) enumerates. Press and release are explicit
+   `write()` calls, so the original stuck-modifier bug still can't come back.
+   *(Fallback if uinput ever fails: cosmic-comp also supports `zwp_virtual_keyboard_manager_v1`,
+   so `wtype` would work — but uinput needs no compositor cooperation at all.)*
 
 The pad's express keys are currently disabled at the xsetwacom level (`Button N 0`), so reading raw
 evdev events is clean and won't double-fire.
@@ -94,6 +127,10 @@ web session set up the scaffolding. When the user says "done with X.Y", flip tha
 
 ## Status
 
-Tutorial scaffolding built: `README.md`, `tutorial/` (curriculum + lessons 0.1 and 0.2 written),
-`ledger/index.html`, `src/`. Current lesson: **0.1 — the terminal**. Next lessons to author when
-reached: 0.3–0.5, then M1. See `PLAN.md` and the ledger for milestone status.
+Tutorial fully authored: `README.md`, `ledger/index.html`, `src/`, and **all 26 lessons** written
+across `tutorial/milestone-0-setup` … `milestone-4-polish` (M0 0.1–0.5, M1 1.1–1.6, M2 2.1–2.7,
+M3 3.1–3.4, M4 4.1–4.4). Current lesson: **4.3 — a tiny GUI** (24 of 26 done; only 4.3 and 4.4
+remain — the tool itself works: pad + pen shortcuts, monitor mapping, pressure curve, config,
+autostart). Lessons are ready to work through
+in order. As the user finishes each ("done with X.Y"), flip that lesson's `status` in the ledger's
+`LEDGER` block and advance the next to `current`. See `PLAN.md` and the ledger for milestone status.

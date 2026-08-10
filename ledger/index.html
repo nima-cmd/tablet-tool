@@ -6,23 +6,37 @@
 <title>Tablet Tool — Progress Ledger</title>
 <style>
   :root{
-    --bg:#0f1216; --panel:#171b22; --panel2:#1d222b; --line:#272d38;
-    --ink:#e7ecf3; --muted:#9aa6b6; --faint:#6b7686;
-    --accent:#5b9dff; --done:#3fbf7f; --current:#ffb02e; --todo:#4a5568;
+    --bg:#101316; --panel:#171c21; --panel2:#1c2329; --line:#2a333c;
+    --ink:#eaeff3; --muted:#a7b4bf; --faint:#75828e;
+    --accent:#4a8fae; --done:#3fbf7f; --current:#e0a72e; --todo:#47525c;
     --shadow:0 1px 0 rgba(255,255,255,.03),0 8px 24px rgba(0,0,0,.35);
   }
   @media (prefers-color-scheme:light){
     :root{
-      --bg:#f4f6fa; --panel:#ffffff; --panel2:#f7f9fc; --line:#e4e8ef;
-      --ink:#1a2029; --muted:#5b6675; --faint:#8a94a3;
-      --accent:#2f6fe0; --done:#1f9d63; --current:#c9820a; --todo:#c2c9d4;
-      --shadow:0 1px 0 rgba(0,0,0,.02),0 8px 24px rgba(20,30,50,.08);
+      --bg:#f4f6f7; --panel:#ffffff; --panel2:#f7fafb; --line:#dde5e9;
+      --ink:#1d2429; --muted:#5f6c76; --faint:#8b98a2;
+      --accent:#33768f; --done:#1f9d63; --current:#c9820a; --todo:#ccd6dc;
+      --shadow:0 1px 0 rgba(0,0,0,.02),0 8px 24px rgba(20,40,50,.08);
     }
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    padding:32px 20px 80px;}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+
+  /* ---------- tab chrome (shared shell) ---------- */
+  .tabbar{position:sticky;top:0;z-index:10;display:flex;gap:6px;justify-content:center;
+    padding:14px 20px;background:var(--bg);border-bottom:1px solid var(--line)}
+  .tabbtn{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--muted);
+    font:600 13.5px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    padding:9px 16px;border-radius:99px;cursor:pointer;letter-spacing:.01em}
+  .tabbtn:hover{color:var(--ink)}
+  .tabbtn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  .tabpanel{display:none}
+  .tabpanel.active{display:block}
+
+  /* ---------- Progress tab ---------- */
+  #tab-progress{padding:32px 20px 80px}
   .wrap{max-width:860px;margin:0 auto}
   header{margin-bottom:8px}
   h1{font-size:24px;margin:0 0 4px;letter-spacing:-.02em}
@@ -41,9 +55,55 @@
   .mtitle{font-size:17px;font-weight:650;margin:0;letter-spacing:-.01em}
   .mgoal{color:var(--muted);font-size:13.5px;margin:4px 0 12px}
   .mcount{color:var(--faint);font-size:12px;margin-left:auto}
-  ul{list-style:none;margin:0;padding:0}
-  li{display:flex;align-items:flex-start;gap:11px;padding:8px 10px;border-radius:9px}
-  li.current{background:color-mix(in srgb,var(--current) 12%,transparent)}
+  ul.lessons{list-style:none;margin:0;padding:0}
+  ul.lessons li{display:flex;align-items:flex-start;gap:11px;padding:8px 10px;border-radius:9px}
+  ul.lessons li.current{background:color-mix(in srgb,var(--current) 12%,transparent)}
+  ul.lessons li.hasreview{cursor:pointer}
+  ul.lessons li.hasreview:hover{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+  .chev{flex:0 0 auto;color:var(--accent);font-size:12px;margin-top:3px;
+    transition:transform .18s ease;font-weight:700}
+  .chev.open{transform:rotate(90deg)}
+
+  /* ---------- lesson detail panel (the reviewable record) ---------- */
+  .detail{margin:2px 0 14px;padding:18px 20px;border:1px solid var(--line);
+    border-left:3px solid var(--accent);border-radius:0 12px 12px 0;background:var(--panel2)}
+  .detail h4{margin:0 0 3px;font-size:14px;letter-spacing:.04em;text-transform:uppercase;
+    color:var(--accent)}
+  .detail .when{color:var(--faint);font-size:12px;margin:0 0 16px}
+  .detail h5{margin:20px 0 8px;font-size:13.5px;color:var(--ink);
+    border-bottom:1px solid var(--line);padding-bottom:5px}
+  .detail p,.detail li{font-size:13.5px;line-height:1.65;color:var(--muted)}
+  .detail ul{margin:6px 0;padding-left:20px}
+  .detail b{color:var(--ink)}
+  .caveat{background:color-mix(in srgb,var(--current) 13%,transparent);
+    border:1px solid color-mix(in srgb,var(--current) 45%,var(--line));
+    border-radius:9px;padding:12px 15px;margin:0 0 16px}
+  .caveat .ct{color:var(--current);font-weight:700;font-size:12px;letter-spacing:.05em;
+    text-transform:uppercase;display:block;margin-bottom:5px}
+  .caveat p{margin:0;font-size:13px}
+  .fix{background:color-mix(in srgb,var(--accent) 12%,transparent);
+    border:1px solid color-mix(in srgb,var(--accent) 40%,var(--line));
+    border-radius:9px;padding:13px 16px;margin:8px 0}
+  .fix p{margin:0 0 8px}.fix p:last-child{margin:0}
+  table.meas{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}
+  table.meas th{text-align:left;color:var(--faint);font-weight:600;font-size:11.5px;
+    letter-spacing:.05em;text-transform:uppercase;padding:5px 8px;border-bottom:1px solid var(--line)}
+  table.meas td{padding:7px 8px;border-bottom:1px solid var(--line);color:var(--muted)}
+  table.meas td.v{font-variant-numeric:tabular-nums;color:var(--ink);font-weight:600}
+  .ok{color:var(--done);font-weight:700}.no{color:var(--accent);font-weight:700}
+
+  /* ---------- image + annotation overlay ---------- */
+  .canvasbox{position:relative;margin:10px 0 6px;border:1px solid var(--line);
+    border-radius:9px;overflow:hidden;background:#fff;line-height:0}
+  .canvasbox img{width:100%;display:block}
+  .canvasbox img.ovl{position:absolute;inset:0;opacity:0;transition:opacity .2s ease}
+  .canvasbox.show img.ovl{opacity:1}
+  .ctrls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+  .tgl{appearance:none;border:1px solid var(--line);background:var(--panel);color:var(--muted);
+    font:600 12px/1 inherit;padding:7px 13px;border-radius:99px;cursor:pointer}
+  .tgl:hover{color:var(--ink)}
+  .tgl.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .fnote{color:var(--faint);font-size:11.5px;font-style:italic}
   .dot{flex:0 0 auto;width:18px;height:18px;border-radius:50%;margin-top:2px;
     border:2px solid var(--todo);position:relative}
   .done .dot{background:var(--done);border-color:var(--done)}
@@ -63,12 +123,74 @@
   .current .pill{background:var(--current);color:#1a1206}
   .done .pill{background:color-mix(in srgb,var(--done) 20%,transparent);color:var(--done)}
   .todo .pill{background:var(--panel2);color:var(--faint);border:1px solid var(--line)}
+  /* a thread that runs alongside the spine rather than in sequence */
+  .parallel .dot{border-color:var(--accent);
+    background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--accent) 30%,transparent),
+      color-mix(in srgb,var(--accent) 30%,transparent) 3px,transparent 3px,transparent 6px)}
+  .parallel .pill{background:color-mix(in srgb,var(--accent) 18%,transparent);color:var(--accent)}
+  /* gated on something earlier */
+  .locked{opacity:.62}
+  .locked .dot{border-style:dashed}
+  .locked .pill{background:var(--panel2);color:var(--faint);border:1px solid var(--line)}
   footer{color:var(--faint);font-size:12px;margin-top:34px;text-align:center;line-height:1.7}
   code{background:var(--panel2);border:1px solid var(--line);border-radius:5px;
     padding:1px 5px;font-size:12.5px}
+
+  /* ---------- Grimoire tab — its own committed look (aged parchment), ---------- */
+  /* ---------- independent of the app shell's light/dark theme.        ---------- */
+  #tab-grimoire{
+    --parch:#e9dbb8; --parch2:#f1e6c8; --edge:#8a6d43;
+    --ink2:#3b2b20; --ink2-soft:#5c4632; --accent2:#7a3b2e; --gold:#93712f;
+    background:
+      radial-gradient(ellipse at top left, rgba(255,255,255,.30), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(0,0,0,.12), transparent 55%),
+      var(--parch);
+    color:var(--ink2);
+    font-family:Georgia,"Palatino Linotype","Book Antiqua",serif;
+    padding:40px 16px 90px;
+    min-height:100vh;
+  }
+  .book{max-width:760px;margin:0 auto;background:var(--parch2);
+    border:1px solid var(--edge);border-radius:4px;
+    box-shadow:0 2px 0 rgba(0,0,0,.06), 0 24px 48px rgba(50,35,15,.30);
+    padding:20px 28px 44px}
+  @media (min-width:640px){ .book{padding:44px 56px 56px} }
+  .gtitle{font-size:26px;text-align:center;letter-spacing:.05em;margin:6px 0 4px;
+    color:var(--accent2);font-variant:small-caps}
+  .gsub{text-align:center;color:var(--ink2-soft);font-style:italic;margin:0 0 6px;font-size:14px}
+  .quill{display:block;margin:0 auto 6px;color:var(--accent2)}
+  .divider{display:flex;align-items:center;gap:14px;margin:30px 0;color:var(--gold)}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--edge);opacity:.6}
+  .sigil{flex:0 0 auto;opacity:.85}
+  .chapter h2{font-size:20px;color:var(--accent2);border-bottom:1px solid var(--edge);
+    padding-bottom:7px;margin:0 0 2px;font-weight:600}
+  .chnum{display:block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:2px}
+  .chgoal{color:var(--ink2-soft);font-style:italic;font-size:13.5px;margin:8px 0 16px}
+  .chapter h3{font-size:14.5px;color:var(--ink2-soft);margin:18px 0 7px;
+    font-variant:small-caps;letter-spacing:.04em;border-bottom:1px dotted var(--edge);
+    padding-bottom:3px}
+  .chapter ul{margin:0 0 6px;padding-left:22px}
+  .chapter li{margin:6px 0;line-height:1.6;font-size:14px}
+  .book code{background:rgba(122,59,46,.08);border:1px solid rgba(138,109,67,.4);
+    border-radius:4px;padding:1px 5px;font-size:12.5px;color:var(--accent2)}
+  .toc{list-style:none;padding:0;margin:0 0 4px;display:grid;gap:6px}
+  .toc a{color:var(--ink2);text-decoration:none;font-size:14px;display:flex;gap:8px}
+  .toc a:hover{color:var(--accent2)}
+  .toc .chnum{margin:0;min-width:110px}
+  .unwritten{font-style:italic;color:var(--ink2-soft);font-size:13.5px}
+  .footnote{margin-top:36px;text-align:center;font-style:italic;color:var(--ink2-soft);font-size:13px;
+    line-height:1.7}
 </style>
 </head>
 <body>
+
+<div class="tabbar">
+  <button class="tabbtn active" data-tab="progress">🎨 Progress</button>
+  <button class="tabbtn" data-tab="grimoire">📜 Grimoire</button>
+</div>
+
+<main id="tab-progress" class="tabpanel active">
 <div class="wrap">
   <header>
     <h1>🖊️ Tablet Tool — Progress Ledger</h1>
@@ -83,6 +205,663 @@
     <code>LEDGER</code> data block below as you finish each lesson.
   </footer>
 </div>
+</main>
+
+<main id="tab-grimoire" class="tabpanel">
+<div class="book">
+  <svg class="quill" width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 32 L26 8 Q30 4 34 8 Q30 12 26 16 Z" stroke="currentColor" stroke-width="1.3" fill="none" stroke-linejoin="round"/>
+    <path d="M8 32 L15 29.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+    <path d="M12 30.5 L27 15.5" stroke="currentColor" stroke-width="0.8" opacity=".55"/>
+  </svg>
+  <h1 class="gtitle">The Grimoire</h1>
+  <p class="gsub">A spellbook of commands &amp; concepts, kept in the language of the Tablet Tool itself</p>
+
+  <div class="divider">
+    <svg class="sigil" width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1"/>
+      <path d="M14 2 L14 26 M2 14 L26 14 M5 5 L23 23 M23 5 L5 23" stroke="currentColor" stroke-width=".7" opacity=".7"/>
+    </svg>
+  </div>
+
+  <ul class="toc">
+    <li><a href="#ch1"><span class="chnum">Chapter I</span> Foundations &amp; Setup</a></li>
+    <li><a href="#ch2"><span class="chnum">Chapter II</span> Detecting Button Presses</a></li>
+    <li><a href="#ch3"><span class="chnum">Chapter III</span> Mapping Buttons to Shortcuts</a></li>
+    <li><a href="#ch4"><span class="chnum">Chapter IV</span> Pen, Monitor Mapping, Pressure</a></li>
+    <li><a href="#ch5"><span class="chnum">Chapter V</span> Polish &amp; Real-World Use <em>(in progress)</em></a></li>
+  </ul>
+
+  <div class="divider">
+    <svg class="sigil" width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1"/>
+      <path d="M14 2 L14 26 M2 14 L26 14 M5 5 L23 23 M23 5 L5 23" stroke="currentColor" stroke-width=".7" opacity=".7"/>
+    </svg>
+  </div>
+
+  <section class="chapter" id="ch1">
+    <span class="chnum">Chapter I</span>
+    <h2>Foundations &amp; Setup</h2>
+    <p class="chgoal">Milestone 0 — getting comfortable with the terminal and Python, and installing our two tools.</p>
+
+    <h3>Terminal basics</h3>
+    <ul>
+      <li><code>whoami</code> — prints your username. Proves the basic loop: you type, it answers.</li>
+      <li><code>pwd</code> — "print working directory": which folder the terminal is currently in.</li>
+      <li><code>ls</code> — lists files/folders in the current directory.</li>
+      <li><code>cd &lt;folder&gt;</code> — "change directory." Looks relative to where you currently
+        are — <code>cd tablet-tool</code> fails if you're not already in the folder that contains
+        it; step in one folder at a time, or give a full path like <code>cd Projects/tablet-tool</code>.</li>
+      <li>The prompt itself (e.g. <code>~/Projects/tablet-tool$</code>) always shows your current location.</li>
+    </ul>
+
+    <h3>Python — two ways to run it</h3>
+    <ul>
+      <li><code>python3</code> alone — opens the <b>REPL</b> (Read-Eval-Print-Loop): type one line,
+        see the result immediately. Great for experimenting. Exit with <code>exit()</code> or Ctrl-D.</li>
+      <li><code>python3 src/somefile.py</code> — runs a whole <b>script</b> file at once. This is how
+        real programs live: saved, editable, rerunnable.</li>
+      <li>Rule of thumb: REPL to experiment, script to keep.</li>
+    </ul>
+
+    <h3>Packages &amp; permissions</h3>
+    <ul>
+      <li><code>sudo apt install -y &lt;package&gt;</code> — installs software via Pop!_OS's package
+        manager. <code>sudo</code> = run as administrator, <code>-y</code> = don't ask for confirmation.</li>
+      <li><code>python3-evdev</code> — a <b>library</b> (code you <code>import</code> into your own
+        scripts) for reading input devices.</li>
+      <li><code>xdotool</code> — a <b>program</b> (run by name, or launched from code) for sending
+        keystrokes/clicks.</li>
+      <li><b>Users &amp; groups</b> — hardware devices under <code>/dev/input/</code> are owned by a
+        group (usually <code>input</code>). <code>sudo usermod -aG input $USER</code> adds your
+        account to that group so you can read the tablet without <code>sudo</code>. Requires
+        logging out/in to take effect. Check membership with <code>groups</code>.</li>
+    </ul>
+  </section>
+
+  <div class="divider">
+    <svg class="sigil" width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1"/>
+      <path d="M14 2 L14 26 M2 14 L26 14 M5 5 L23 23 M23 5 L5 23" stroke="currentColor" stroke-width=".7" opacity=".7"/>
+    </svg>
+  </div>
+
+  <section class="chapter" id="ch2">
+    <span class="chnum">Chapter II</span>
+    <h2>Detecting Button Presses</h2>
+    <p class="chgoal">Milestone 1 — opening the tablet's Pad and printing which express key was pressed.</p>
+
+    <h3>Core Python building blocks</h3>
+    <ul>
+      <li><code>import x</code> / <code>from x import y, z</code> — pulls code from a library into
+        your file. <code>from evdev import InputDevice, list_devices</code> grabs only those two
+        named tools out of the whole <code>evdev</code> library.</li>
+      <li><b>Variable</b> — a name holding a value, e.g. <code>path = "/dev/input/event5"</code>.</li>
+      <li><b>List</b> — an ordered bunch of values in <code>[...]</code>. <code>list_devices()</code>
+        returns a list of device path strings.</li>
+      <li><b><code>for</code> loop</b> — <code>for path in list_devices():</code> runs its body once
+        per item, with <code>path</code> set to each one in turn. The loop header <i>is</i> where the
+        variable gets declared and reassigned each pass — there's no separate declaration step in
+        Python.</li>
+      <li><b>Object &amp; dot notation</b> — <code>InputDevice(path)</code> builds an object bundling
+        data about that device; <code>device.name</code> / <code>device.path</code> read specific
+        pieces off it with a dot.</li>
+      <li><b><code>if</code> / string membership</b> — <code>if "Pad" in device.name:</code> is
+        <code>True</code> when that exact substring appears anywhere inside the bigger string.
+        <b>Case-sensitive</b>: <code>"pad"</code> and <code>"Pad"</code> are different checks entirely.</li>
+      <li><b><code>None</code> as a placeholder</b> — <code>pad = None</code> means "nothing found
+        yet"; <code>if pad:</code> is only <code>True</code> once it holds a real object, not
+        <code>None</code>.</li>
+    </ul>
+
+    <h3>evdev specifics</h3>
+    <ul>
+      <li><code>list_devices()</code> — asks the OS for every input device path currently on the machine.</li>
+      <li><code>InputDevice(path)</code> — opens a path as a device object.</li>
+      <li><code>device.name</code> — the human-readable device name (e.g.
+        <code>"Hanvon Ugee Deco Pro MW Pad"</code> over the wireless dongle, or
+        <code>"UGTABLET Deco Pro MW Pad"</code> over USB-C cable — the same physical device can
+        report different names depending on connection mode, which is exactly why matching on a
+        substring like <code>"Pad"</code> is safer than an exact match).</li>
+      <li><code>device.read_loop()</code> — gives an endless stream of events from that one device.
+        Blocks (waits patiently, no CPU burned) until the next event arrives. Runs forever — stop it
+        yourself with Ctrl-C, which raises a <code>KeyboardInterrupt</code> (the traceback you see on
+        Ctrl-C is expected, not a bug).</li>
+      <li><b>Event anatomy</b> — every event has:
+        <ul>
+          <li><b>type</b> — what kind of thing happened. Key ones used so far: <code>EV_KEY</code>
+            (a button/key), <code>EV_REL</code> (relative motion, e.g. the Pad's dial),
+            <code>EV_MSC</code> (misc scan-code metadata, safe to ignore).</li>
+          <li><b>code</b> — which specific button/axis. E.g. <code>256</code>–<code>263</code> for
+            our 8 Pad express keys; <code>320</code> (<code>BTN_TOOL_PEN</code>, proximity, not a
+            real click), <code>330</code> (<code>BTN_TOUCH</code>, the pen tip touching down),
+            <code>331</code>/<code>332</code> (<code>BTN_STYLUS</code>/<code>BTN_STYLUS2</code>, the
+            two real barrel buttons).</li>
+          <li><b>value</b> — for <code>EV_KEY</code>: <code>1</code> = pressed down, <code>0</code> =
+            released, <code>2</code> = held/auto-repeat. For <code>EV_REL</code> (the dial): a
+            movement amount, not a press state at all.</li>
+        </ul>
+      </li>
+      <li><code>from evdev import ecodes</code> + <code>event.type == ecodes.EV_KEY</code> — readable
+        names for these numeric type constants instead of memorizing raw numbers.</li>
+      <li><b>Why filter to <code>value == 1</code></b> — acting only on the press edge guarantees one
+        tap = one action, not a down-and-up pair, not repeats while held.</li>
+      <li><code>evtest</code> (<code>sudo evtest</code>) — a tool that talks directly to the kernel,
+        bypassing our Python entirely. Useful for isolating "is this a code problem or a
+        hardware/driver problem?"</li>
+    </ul>
+
+    <h3>Debugging lessons learned</h3>
+    <ul>
+      <li>Indentation in Python <b>is</b> the block structure, not decoration — dedenting a line by
+        mistake changes what it's nested inside of, silently changing behavior (bit us more than
+        once: firing logic ending up outside the loop it was meant to be inside).</li>
+      <li><code>==</code> (compare) vs <code>=</code> (assign) — the #1 beginner mixup.
+        <code>if event.value == 1</code> asks a question; <code>event.value = 1</code> would
+        (wrongly) assign.</li>
+    </ul>
+  </section>
+
+  <div class="divider">
+    <svg class="sigil" width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1"/>
+      <path d="M14 2 L14 26 M2 14 L26 14 M5 5 L23 23 M23 5 L5 23" stroke="currentColor" stroke-width=".7" opacity=".7"/>
+    </svg>
+  </div>
+
+  <section class="chapter" id="ch3">
+    <span class="chnum">Chapter III</span>
+    <h2>Mapping Buttons to Shortcuts</h2>
+    <p class="chgoal">Milestone 2 — press a button, fire a real keyboard shortcut via xdotool.</p>
+
+    <h3>Keystrokes</h3>
+    <ul>
+      <li>A <b>keystroke</b> = one key. A <b>shortcut</b> = a key plus <b>modifiers</b>
+        (<code>ctrl</code>, <code>shift</code>, <code>alt</code>, <code>super</code>), written with
+        <code>+</code>: <code>ctrl+z</code>, <code>ctrl+shift+z</code>.</li>
+      <li><code>xdotool key &lt;combo&gt;</code> — press-and-release a keyboard shortcut, e.g.
+        <code>xdotool key ctrl+z</code>.</li>
+      <li><code>xdotool click &lt;button&gt;</code> — a mouse click, not a keyboard combo. Button
+        <code>3</code> = right-click.</li>
+      <li><code>xdotool type "&lt;text&gt;"</code> — types literal text.</li>
+      <li>Symbol keys sometimes need their full keysym <b>name</b>, not the raw character:
+        <code>bracketleft</code>/<code>bracketright</code> for <code>[</code>/<code>]</code>;
+        function keys need capital letters, <code>F4</code> not <code>f4</code>. All xdotool key
+        names are case-sensitive.</li>
+      <li>xdotool acts on whatever window currently has <b>focus</b> — same as your real keyboard.
+        <code>sleep N</code> (shell) or <code>time.sleep(N)</code> (Python) buys time to click into
+        the target app before it fires.</li>
+      <li><b>Real gotcha hit while testing:</b> if the terminal running <code>detect.py</code>
+        itself has focus when a <code>ctrl+z</code> shortcut fires, the terminal doesn't send it
+        anywhere — it treats Ctrl+Z as its own built-in <b>suspend</b> signal
+        (<code>SIGTSTP</code>) and pauses <code>detect.py</code> mid-execution, silently, with no
+        error. Symptom: you press the "undo" pad key and nothing prints, ever — the whole script
+        just froze. Fix: run <code>fg</code> in that terminal to resume it, and always click into
+        the actual target app (Krita, etc.) before testing a shortcut, never leave focus sitting on
+        the terminal that's running the tool.</li>
+    </ul>
+
+    <h3>Running programs from Python</h3>
+    <ul>
+      <li><code>import subprocess</code> + <code>subprocess.run(["xdotool", "key", "ctrl+z"])</code>
+        — runs another program from inside a script. Always pass a <b>list of separate strings</b>,
+        never one combined string — a list hands each piece straight to the program with no shell
+        re-interpreting spaces/special characters. Safer, avoids a whole category of bugs.</li>
+      <li>A common bug: writing <code>"combo"</code> (a literal string) instead of <code>combo</code>
+        (the variable) — quotes change everything.</li>
+    </ul>
+
+    <h3>Dictionaries &amp; config files</h3>
+    <ul>
+      <li><b>Dictionary</b> — maps a key to a value: <code>SHORTCUTS = {256: "ctrl+z", 257: "b"}</code>.
+        <code>SHORTCUTS.get(event.code)</code> looks up a code and returns its shortcut, or
+        <code>None</code> if it's not in the dict — no crash, just nothing to fire.</li>
+      <li><b>Config vs code</b> — code is the logic (read events, fire keys); config is your personal
+        choices (which key does what). Separating them means rebinding a key needs zero code changes.</li>
+      <li><b>JSON</b> — a text format for data, close to a Python dict but with quoted keys always:
+        <code>{"256": "ctrl+z"}</code>. Read with <code>import json</code> +
+        <code>json.load(f)</code>; the loaded keys come back as <b>strings</b>, not numbers, so they
+        need converting to match <code>event.code</code>.</li>
+      <li><b>Dict comprehension</b> —
+        <code>{int(code): combo for code, combo in raw.items()}</code> builds a new dict by looping
+        over an existing one in one line. <code>.items()</code> gives you (key, value) pairs to loop
+        over. Equivalent to a plain <code>for</code> loop that fills in a dict one entry at a time,
+        just condensed.</li>
+      <li><b>String methods</b>: <code>.startswith("click:")</code> checks a prefix;
+        <code>.split(":", 1)[1]</code> splits on the first <code>:</code> and grabs everything after
+        it — used to support both <code>"ctrl+z"</code> (implicit keyboard shortcut) and
+        <code>"click:3"</code> (explicit mouse click) in the same config file, without rewriting
+        every existing entry when adding a new kind of action.</li>
+    </ul>
+  </section>
+
+  <div class="divider">
+    <svg class="sigil" width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1"/>
+      <path d="M14 2 L14 26 M2 14 L26 14 M5 5 L23 23 M23 5 L5 23" stroke="currentColor" stroke-width=".7" opacity=".7"/>
+    </svg>
+  </div>
+
+  <section class="chapter" id="ch4">
+    <span class="chnum">Chapter IV</span>
+    <h2>Pen, Monitor Mapping, Pressure</h2>
+    <p class="chgoal">Milestone 3 — wrapping xinput/xsetwacom to control the pen itself.</p>
+
+    <h3>Configuring vs reading a device</h3>
+    <ul>
+      <li><code>xinput list</code> — lists every X11 input device (general purpose).</li>
+      <li><code>xsetwacom --list devices</code> — lists devices specifically on the <i>wacom</i> X
+        driver (which this pen is forced onto via a config rule, since the stock driver misbehaves).</li>
+      <li><code>xsetwacom --list parameters</code> — every pen property you can tune:
+        <code>Area</code>/<code>MapToOutput</code> (monitor mapping, upcoming),
+        <code>PressureCurve</code> (pressure feel, upcoming). We deliberately do <b>not</b> use
+        <code>xsetwacom</code>'s <code>Button</code>/<code>key</code> action for shortcuts — that's
+        the stuck-modifier bug this whole project was built to avoid. Keybindings stay the
+        evdev+xdotool way.</li>
+    </ul>
+
+    <h3>Watching multiple devices at once</h3>
+    <ul>
+      <li><b>Why we got stuck:</b> <code>read_loop()</code> blocks forever on <i>one</i> device — it
+        never naturally returns, it just keeps waiting for that device's next event. Our first
+        attempt had <code>if pen: ... for event in pen.read_loop(): ...</code> written <i>before</i>
+        <code>if pad: ... for event in pad.read_loop(): ...</code>. In practice: pen shortcuts fired
+        correctly, but Pad shortcuts never fired at all — not because the Pad code was broken, but
+        because execution never even reached it. The program got stuck inside the pen's "listen
+        forever" loop, so the pad block below it never got a turn to run. You can't just stack two
+        infinite loops back-to-back and expect both to execute — only the first ever runs.</li>
+      <li><code>import selectors</code> — another standard-library module (same category as
+        <code>json</code>/<code>subprocess</code>), built for "wait until any of several things is
+        ready, then tell me which."</li>
+      <li><code>selectors.DefaultSelector()</code> — builds a fresh "watcher" object.</li>
+      <li><code>sel.register(device, selectors.EVENT_READ)</code> — adds a device to the watcher's
+        list, and says "notify me when it has something readable." Can register several devices on
+        one watcher.</li>
+      <li><code>while True: for key, mask in sel.select():</code> — an intentional infinite loop
+        wrapping <code>sel.select()</code>, since <code>select()</code> only waits for <i>one</i>
+        round of "something's ready" and then returns; wrapping it keeps asking again forever.
+        <code>sel.select()</code> blocks (efficiently) until any registered device has data ready,
+        then returns a list of <code>(key, mask)</code> pairs, one per device that fired.</li>
+      <li><code>key.fileobj</code> — inside that loop, this is how you get back the actual device
+        object (<code>pad</code> or <code>pen</code>, whichever triggered) from the pair
+        <code>sel.select()</code> handed you.</li>
+      <li><code>device.read()</code> — like <code>read_loop()</code>, but drains whatever's
+        currently pending <b>without blocking forever</b>; it returns control once it's done, so the
+        outer <code>while True</code> can loop back to <code>sel.select()</code> and wait for the
+        next thing.</li>
+      <li>This <b>fully replaces</b> having a separate <code>if pad: ... read_loop() ...</code> and
+        <code>if pen: ... read_loop() ...</code> block each with their own copy of the same
+        combo-firing logic — one shared loop now serves whichever device actually fired. The
+        one-time "found the pad"/"found the pen" confirmation prints stay, but move to run once up
+        front, before the loop starts, rather than being tied to either device's own read loop.</li>
+      <li><b>Ordering matters</b>: <code>sel.register(pad, ...)</code> has to come <i>after</i>
+        <code>pad</code> is actually found (assigned from the device-search loop), not before —
+        referencing a variable before it's assigned raises <code>NameError</code>, since Python
+        runs top to bottom.</li>
+    </ul>
+
+    <h3>Mapping the pen to one monitor</h3>
+    <ul>
+      <li><code>xrandr --listmonitors</code> — lists your monitors ("outputs") by name, e.g.
+        <code>DP-0</code>, <code>DP-4</code>. By default the pen's area stretches across the
+        <i>entire</i> desktop, which feels squished and has the wrong aspect ratio.</li>
+      <li><code>xinput map-to-output "&lt;device name&gt;" &lt;output&gt;</code> — confines that
+        device to just one monitor; X11 works out the coordinate math.</li>
+      <li><b>Two different device registries, two different names</b>: the <code>evdev</code> name
+        (what <code>pen.name</code> gives you, from the kernel — e.g.
+        <code>"UGTABLET Deco Pro MW Pen"</code>) is <i>not</i> always identical to the name X11/
+        <code>xinput</code> registers the same physical device under (e.g.
+        <code>"UGTABLET Deco Pro MW Pen stylus"</code> — note the added <code>" stylus"</code>).
+        Substring matching (<code>"Pen" in device.name</code>) works fine across both layers, but an
+        <b>exact</b> name match (like <code>map-to-output</code> needs) must use the exact string
+        from whichever layer you're actually calling into.</li>
+      <li><b>Writing your own importable module</b> — <code>import map_pen</code> works exactly like
+        <code>import json</code>, except <code>map_pen</code> is your own file
+        (<code>src/map_pen.py</code>), not a built-in library. Any <code>.py</code> file can be
+        imported by its filename (minus <code>.py</code>) from another file in the same folder.</li>
+      <li><b>Defining your own function</b> —
+        <code>def map_to_monitor(pen_name, output="DP-0"):</code> bundles reusable logic under a
+        name you call later, the same idea as <code>print()</code> or <code>open()</code> except you
+        wrote it. <code>pen_name</code> and <code>output</code> are <b>parameters</b> — values the
+        caller supplies each time; <code>output="DP-0"</code> gives that parameter a <b>default</b>
+        value, used only if the caller doesn't supply one.</li>
+      <li><b>JSON has no comment syntax at all</b> — not <code>#</code>, not <code>//</code>,
+        nothing. A stray <code>#comment</code> line at the top of a <code>.json</code> file breaks
+        <code>json.load</code> immediately (<code>JSONDecodeError: Expecting value</code>), even
+        though the same habit is totally normal and expected in a <code>.py</code> file.</li>
+      <li><b>Structuring config beyond one flat dict</b> — once you need more than one <i>kind</i>
+        of setting (button shortcuts <i>and</i> a monitor name), nest them under named keys instead
+        of mixing everything into one flat object:
+        <code>{"shortcuts": {"256": "ctrl+z", ...}, "monitor": "DP-0"}</code>. Reach one level deeper
+        when loading: <code>raw["shortcuts"].items()</code> instead of <code>raw.items()</code>.
+        Dictionary/JSON keys are exact, case-sensitive strings — <code>raw["Shortcuts"]</code> and
+        <code>raw["shortcuts"]</code> are different keys, same trap as <code>"Pad"</code> vs.
+        <code>"pad"</code> back in Lesson 1.3.</li>
+    </ul>
+
+    <h3>Shaping the pressure curve</h3>
+    <ul>
+      <li>The pen reports pressure as a raw number; the <b>pressure curve</b> decides how that raw
+        number maps to actual output (line thickness/opacity). Softer = light touches do more,
+        firmer = you must press harder. Genuinely personal, worth tuning by feel.</li>
+      <li><code>xsetwacom --get "&lt;pen name&gt;" PressureCurve</code> /
+        <code>xsetwacom set "&lt;pen name&gt;" PressureCurve a b c d</code> — four numbers (0–100),
+        two Bézier control points. <code>0 0 100 100</code> is linear (the baseline); lowering the
+        second number (e.g. <code>0 10 80 100</code>) softens it — output hits max sooner, before
+        input reaches 100%; raising the first/lowering the last (e.g. <code>10 0 100 90</code>)
+        firms it up — more pressure needed for the same effect.</li>
+      <li><b>List comprehension</b> — <code>[str(n) for n in curve]</code> is the list-building
+        twin of the dict comprehension from Milestone 2: loop over <code>curve</code>, convert each
+        number to a string, collect the results into a new list. Needed because
+        <code>subprocess.run</code> requires a list of strings, not numbers.</li>
+      <li><code>list1 + list2</code> — joins two lists into one combined list; used to glue the
+        fixed part of an xdotool-style command (<code>["xsetwacom", "set", pen_name,
+        "PressureCurve"]</code>) onto the converted curve numbers.</li>
+      <li><b>Importing a module isn't the same as using it</b> — a real gotcha we hit:
+        <code>import pressure</code> at the top of a file doesn't error even if nothing below
+        actually calls anything from it. Just because a script runs with no crash doesn't mean every
+        piece you added is actually wired up — check that you both <i>read</i> the relevant config
+        value (<code>PRESSURE_CURVE = raw["pressure_curve"]</code>) <i>and</i> <i>call</i> the
+        function (<code>pressure.set_pressure_curve(...)</code>) somewhere real code paths reach.</li>
+    </ul>
+  </section>
+
+  <div class="divider">
+    <svg class="sigil" width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1"/>
+      <path d="M14 2 L14 26 M2 14 L26 14 M5 5 L23 23 M23 5 L5 23" stroke="currentColor" stroke-width=".7" opacity=".7"/>
+    </svg>
+  </div>
+
+  <section class="chapter" id="ch5">
+    <span class="chnum">Chapter V · in progress</span>
+    <h2>Polish &amp; Real-World Use</h2>
+    <p class="chgoal">Milestone 4 — turning a working script into a real, everyday tool.</p>
+
+    <h3>A friendly, structured config</h3>
+    <ul>
+      <li><b>Structuring by real domain, not by coincidence</b> — split a flat
+        <code>"shortcuts"</code> dict into <code>pad_shortcuts</code> / <code>pen_shortcuts</code>,
+        named after the actual devices, rather than relying on their code numbers happening not to
+        collide. More honest about what the data means, and safer if that ever changed.</li>
+      <li><code>dict_a | dict_b</code> — merges two dictionaries into one new combined dictionary
+        (right side wins on any duplicate key). Used to recombine <code>pad_shortcuts</code> and
+        <code>pen_shortcuts</code> back into one <code>SHORTCUTS</code> lookup table at runtime,
+        since the firing logic itself doesn't care which device a code came from.</li>
+      <li><b><code>dict["key"]</code> vs. <code>dict.get("key")</code></b> — the "defaulted" idea.
+        Both fetch a value by key, but behave differently when the key is <i>missing</i>:
+        <code>some_dict["key"]</code> crashes with <code>KeyError</code> if it's not there — it
+        assumes the key must exist. <code>some_dict.get("key")</code> instead returns
+        <code>None</code> on a miss; <code>some_dict.get("key", default_value)</code> returns
+        <code>default_value</code> instead of <code>None</code>. Two different uses of this in the
+        app: <code>raw.get("pad_shortcuts", {})</code> treats "no pad shortcuts configured" as a
+        normal state (empty dict) rather than a fatal error when loading config; further down,
+        <code>SHORTCUTS.get(event.code)</code> (no default given, so <code>None</code> by default)
+        lets <code>if combo:</code> cleanly skip any pressed key that simply isn't mapped to
+        anything, rather than crashing on every unmapped press. Same pattern for
+        <code>MONITOR</code>/<code>PRESSURE_CURVE</code>, defaulting to <code>None</code> (meaning
+        "don't set this") if absent from config. The common thread: <code>.get()</code> turns
+        "missing" into a normal, handle-able case instead of a crash — you choose, case by case,
+        what "missing" should actually mean.</li>
+      <li><b><code>try:</code> / <code>except ...:</code></b> — a new control structure: "attempt
+        this code; if it fails in <i>this specific way</i>, run this instead of crashing the whole
+        program." Different from <code>if</code>, which checks a condition <i>before</i> running
+        code — <code>try</code> runs the code regardless and catches specific failures if/when they
+        happen.</li>
+      <li><code>except FileNotFoundError:</code> — catches the specific, named error Python raises
+        when you try to open a file that doesn't exist.</li>
+      <li><code>except json.JSONDecodeError as e:</code> — catches broken/invalid JSON specifically
+        (like a stray comment, or wrong casing). <code>as e</code> captures the actual error object
+        into a variable so you can print its details — <code>e</code> holds the specific reason it
+        failed.</li>
+      <li><code>import sys</code> + <code>sys.exit(1)</code> — <code>sys</code> ("system") holds
+        tools for talking to the Python interpreter itself; <code>sys.exit(1)</code> stops the
+        program immediately, right there, without running anything below it. The <code>1</code>
+        signals "this failed" to the operating system (as opposed to finishing normally, or
+        <code>sys.exit(0)</code>, which both mean success) — mainly useful when other scripts/tools
+        check whether a program succeeded.</li>
+      <li>Net effect: a missing or broken <code>config.json</code> now prints one plain, actionable
+        sentence and exits cleanly — no wall of red traceback text.</li>
+    </ul>
+
+    <h3>Starting automatically on login</h3>
+    <ul>
+      <li><b><code>.desktop</code> files</b> — a plain-text "what to run and what to call it"
+        description. Any file placed in <code>~/.config/autostart/</code> gets read automatically
+        by XFCE at login — nothing to click, no icon involved, it just works by existing in the
+        right folder with the right content:
+        <pre style="white-space:pre-wrap">[Desktop Entry]
+Type=Application
+Name=Tablet Tool
+Exec=/usr/bin/python3 /home/nima-cmd/Projects/tablet-tool/src/detect.py
+X-GNOME-Autostart-enabled=true</pre>
+        <code>Exec</code> must be an absolute path (starts with <code>/</code>) — the same command
+        that would start the app from a terminal, but autostart has no working directory to assume,
+        so a relative one would silently fail to find the program at all.</li>
+      <li><b>A real bug this exposed:</b> running <code>detect.py</code> by its full path while
+        still sitting inside <code>src/</code> looked fine — but that's because the current
+        directory happened to still contain <code>config.json</code>. Testing the exact same command
+        from a <i>different</i> directory (<code>cd ~</code> first) revealed the real problem: a
+        relative <code>open("config.json")</code> only works if you happen to be standing in the
+        right folder when you run it — which autostart never guarantees.</li>
+      <li><b>Finding files relative to your own script, not the current directory:</b>
+        <code>__file__</code> is a built-in variable every script gets, holding the path to itself.
+        <code>os.path.abspath(__file__)</code> makes that path absolute;
+        <code>os.path.dirname(...)</code> strips the filename off, leaving just the containing
+        folder; <code>os.path.join(folder, "config.json")</code> safely glues a folder and filename
+        back into one path (the correct way to build paths, rather than gluing strings by hand).
+        Together: <code>CONFIG_PATH</code> always points at the config file sitting next to
+        <code>detect.py</code>, no matter what directory the script was launched from.</li>
+      <li><code>pgrep -af &lt;name&gt;</code> — lists running processes whose command line matches
+        <code>&lt;name&gt;</code>, with full detail (<code>-a</code>) and their process ID. Used to
+        confirm the autostarted tool is actually running, without needing to have started it
+        yourself.</li>
+      <li><b>Discovered and resolved a real conflict</b>: a pre-existing autostart script
+        (<code>~/.local/bin/tablet-setup.sh</code>, from before this tutorial existed) was resetting
+        the pen to the full desktop on every login — directly undoing Lesson 3.3's
+        <code>map-to-output</code> single-monitor mapping. Its own comment even said
+        <i>"custom mapping will come from the user's own config tool later"</i> — this tool is now
+        that config tool, so the conflicting line was removed from the old script, leaving it to
+        handle only what it still uniquely owns (display layout, waiting for the tablet, disabling
+        express keys at the X level).</li>
+      <li><code>nano &lt;path&gt;</code> — a simple terminal text editor, useful for quick edits to
+        files outside your project folder. <b>Ctrl+O</b> writes/saves, <b>Enter</b> confirms the
+        filename, <b>Ctrl+X</b> exits.</li>
+    </ul>
+
+    <h3>A tiny GUI (Tkinter)</h3>
+    <ul>
+      <li><b>GUI vs. everything before this</b> — every earlier script ran top-to-bottom once and
+        exited. A GUI is <b>event-driven</b>: it shows a window and then <i>waits</i> for you
+        (clicks, typing) via its own loop, <code>root.mainloop()</code> — same spirit as
+        <code>read_loop()</code>/<code>sel.select()</code> waiting for tablet events, just waiting
+        for UI events instead.</li>
+      <li><code>import tkinter as tk</code> — Python's built-in GUI toolkit (the <code>python3-tk</code>
+        system package provides supporting files; the library import itself needs no separate pip
+        install). <code>as tk</code> is an <b>alias</b>: bring in the whole library, but let me call
+        it something shorter than typing <code>tkinter.</code> everywhere.</li>
+      <li><code>tk.Tk()</code> builds the actual window object (<code>root</code>); every other
+        widget belongs to it, directly or indirectly. <code>root.title(...)</code> sets the title
+        bar text.</li>
+      <li><b>Widgets &amp; parenting</b> — <code>tk.Label(root, text=...)</code>,
+        <code>tk.Entry(row)</code>, <code>tk.Button(root, ...)</code> all take their <b>parent</b>
+        widget as the first argument (which window/frame they live inside — a containment
+        relationship, like folders holding files). None of them actually appear until you call
+        <code>.pack(...)</code> on them — building a widget and placing it on screen are two
+        separate steps.</li>
+      <li><code>tk.Frame(root)</code> — an invisible container, used purely to group other widgets.
+        <code>.pack(side="left")</code> on widgets inside a frame lines them up horizontally instead
+        of <code>.pack()</code>'s default of stacking downward.</li>
+      <li><code>tk.Entry</code> — an editable text box (vs. <code>Label</code>, which only
+        displays). <code>entry.insert(0, combo)</code> pre-fills it with a starting value (position
+        <code>0</code> = the very start); <code>entry.get()</code> reads whatever's <i>currently</i>
+        typed in it, live, whenever you call it — the two are opposites, one sets the initial value,
+        the other reads the live one.</li>
+      <li><b>Storing widget objects in a dict, not just data</b> — <code>pad_entries[code] = entry</code>
+        stores the actual <code>Entry</code> widget itself as the dict's value (not a string or
+        number), keyed by its code — so later code can find "the box currently showing this code's
+        value" again, by code, without needing a separate list to search through.</li>
+      <li><b>A real copy-paste bug</b>: duplicating the Pad loop's block for Pen and forgetting to
+        rename every reference inside it — <code>pad_entries[code] = entry</code> left unchanged
+        inside the <i>pen</i> loop meant <code>pen_entries</code> stayed empty while
+        <code>pad_entries</code> silently absorbed both. No crash, no visible symptom in the window
+        itself — only would have surfaced later, when Save tried to read from an empty
+        <code>pen_entries</code>.</li>
+      <li><b>Functions can see variables from the surrounding script</b> — <code>def save():</code>
+        takes no parameters at all, yet freely uses <code>pad_entries</code>, <code>pen_entries</code>,
+        <code>raw</code>, <code>CONFIG_PATH</code> — none passed in. A function defined at a
+        script's top level automatically sees every other top-level variable that already exists,
+        unlike <code>map_pen.map_to_monitor(pen_name, output)</code>, which needed real parameters
+        because it lives in a <i>separate file</i> with no automatic access to <code>detect.py</code>'s
+        variables.</li>
+      <li><code>open(CONFIG_PATH, "w")</code> — <b>write mode</b>, the first time we've used
+        anything but the default read mode. Opening a file this way immediately erases its previous
+        contents, ready to be overwritten — different from every earlier <code>open(...)</code>,
+        which only ever read.</li>
+      <li><code>json.dump(raw, f, indent=2)</code> — the reverse of <code>json.load</code>: takes a
+        Python dict and writes it out as JSON text. <code>indent=2</code> keeps the output
+        human-readable (multi-line, indented) instead of one unreadable long line.</li>
+      <li><b>Passing a function without calling it</b> — <code>command=save</code> (no parentheses)
+        hands Tkinter <i>the function itself</i>, to be called later whenever the button is
+        actually clicked. <code>command=save()</code> would instead call it immediately, once,
+        while the window is still being built, and hand Tkinter whatever it returns (<code>None</code>,
+        since <code>save()</code> never <code>return</code>s anything) — the wrong thing entirely.</li>
+      <li><b>Another indentation trap, a chicken-and-egg one this time</b>: pasting
+        <code>tk.Button(..., command=save)</code> <i>inside</i> <code>save()</code>'s own body meant
+        the button would only ever get created by <i>calling</i> <code>save()</code> — but the only
+        thing that could call <code>save()</code> was clicking a button that didn't exist yet
+        because it was never created. Nothing could ever happen. Fix: the button must be created
+        once, at the top level, <i>after</i> <code>save()</code>'s definition — by the time that
+        line runs, <code>save</code> already exists above it, ready to be handed over as a
+        reference.</li>
+      <li><b>Extracting a shared <code>keymap.py</code></b> — rather than duplicating the
+        <code>KEYS</code> dict (physical key → label) into both <code>detect.py</code> and
+        <code>gui.py</code>, it moved into its own tiny file both scripts import from — the same
+        "one copy, reused" pattern as <code>map_pen.py</code>/<code>pressure.py</code>. Also
+        upgraded the labels themselves from raw internal names (<code>"above_tl"</code>) to
+        genuinely readable ones (<code>"Above Top-Left"</code>).</li>
+      <li><b>String keys vs. int keys, yet again</b> — <code>KEYS</code>'s keys are real integers
+        (<code>256</code>), but <code>code</code> coming out of JSON-loaded data is always a
+        <b>string</b> (<code>"256"</code>). <code>KEYS.get(code, code)</code> would silently miss
+        every lookup; it has to be <code>KEYS.get(int(code), code)</code> — the same
+        string-vs-number mismatch from Lesson 4.1's config loading, showing up again in a new
+        place.</li>
+    </ul>
+
+    <h3>Per-application profiles (the finale)</h3>
+    <ul>
+      <li><b>The missing piece: which app is focused right now?</b>
+        <code>xdotool getactivewindow getwindowname</code> gives the focused window's title;
+        <code>xprop -id $(xdotool getactivewindow) WM_CLASS</code> gives the app's "class" — often a
+        cleaner, more stable identifier than the title, since a title changes with the open document
+        but the class usually doesn't. (<code>getwindowclassname</code> looked like it should exist
+        but isn't a real subcommand in this xdotool version — <code>xprop</code> is the working
+        fallback.)</li>
+      <li><b>The same focus problem shows up again, in query form</b> — running a command to check
+        the active window requires clicking back into the terminal to type it, which makes the
+        terminal the active window right when the query fires. Same fix as Lesson 2.2's `xdotool
+        sleep`, just using the shell's own <code>sleep 2 &amp;&amp; ...</code> this time to buy time
+        to click into the real target app first.</li>
+      <li><b>Capturing a program's output instead of just running it</b> —
+        <code>subprocess.run([...], capture_output=True, text=True)</code>. Every earlier
+        <code>subprocess.run</code> call let its target's output go straight to the terminal (or
+        ignored it); <code>capture_output=True</code> redirects it into the returned object instead,
+        and <code>text=True</code> gives you back a normal string rather than raw bytes.
+        <code>result.stdout</code> holds the captured text; <code>.strip()</code> removes the
+        trailing newline nearly every command output has; <code>.lower()</code> avoids
+        capitalization mismatches when matching later. <code>repr(value)</code> — new debugging
+        tool: prints a value with its quotes/escape characters visible, handy for confirming exactly
+        what a string contains (invisible whitespace, etc.) when a plain <code>print</code> wouldn't
+        show it.</li>
+      <li><b>Profiles nest <i>above</i> the existing device split, not instead of it</b> —
+        <code>config.json</code> gained a <code>profiles</code> layer, each profile containing its
+        own full <code>pad_shortcuts</code>/<code>pen_shortcuts</code> (the same shape from Lesson
+        4.1), rather than replacing that structure. <code>monitor</code>/<code>pressure_curve</code>
+        stayed at the top level, outside <code>profiles</code>, since those are pen hardware
+        settings that don't vary by which app is focused.</li>
+      <li><code>pick_profile(name)</code> — loops over every profile name, returns the first whose
+        name appears as a substring inside the active window's name (same <code>in</code>
+        substring-match idea as <code>"Pad" in device.name</code> from Lesson 1.3); falls back to
+        whatever <code>default_profile</code> points to if nothing matched, using
+        <code>.get()</code> twice in a row so a missing/misconfigured default doesn't crash either.</li>
+      <li><b>Rebuilding the shortcuts lookup fresh, on every single key-press</b> — instead of
+        computing one flat <code>SHORTCUTS</code> dict once at startup, the loop now checks the
+        active window and rebuilds <code>pad_map</code>/<code>pen_map</code>/<code>shortcuts</code>
+        every time a key goes down, sourced from whichever profile currently matches. Simple,
+        correct, and — per the lesson's own hint — fast enough not to bother caching yet.</li>
+      <li><b>The Tab-key capitalization gotcha, again</b> — <code>"ctrl+tab"</code> failed with
+        <code>No such key name 'tab'</code>; the real X11/xdotool name is <code>Tab</code> (capital),
+        same category of trap as <code>F4</code> vs. <code>f4</code> back in Lesson 2.6.</li>
+      <li><b>A real "wrong file" mixup</b> — fixed the Tab typo in <code>config.example.json</code>
+        first, tested, and got the exact same error again — because <code>detect.py</code> actually
+        reads <code>config.json</code> (the real, gitignored one), not the example/template. Two
+        files with near-identical names and content are easy to mix up; worth double-checking which
+        one a running program actually loads before concluding a fix didn't work.</li>
+      <li><b>A real regression, caught before it became confusing later</b>: restructuring
+        <code>config.json</code> around <code>profiles</code> silently broke <code>gui.py</code>
+        from Lesson 4.3 — its <code>raw.get("pad_shortcuts", {})</code> now finds nothing, since that
+        key no longer exists at the top level. Fixed by adding profile-switching to the GUI itself
+        (see below). Lesson: restructuring shared data can quietly break a *different* program that
+        also reads it, not just the one you're actively editing.</li>
+      <li><b>Redrawing a GUI instead of building it once</b> — <code>content.winfo_children()</code>
+        returns every widget currently inside a container; looping over them and calling
+        <code>.destroy()</code> removes each one, clearing the display before rebuilding it fresh for
+        a newly-selected profile. Without this, switching profiles would just keep stacking more rows
+        on top of the old ones forever.</li>
+      <li><code>global current_profile</code> — the first time a function needed to
+        <i>reassign</i> an outer variable rather than just read one. Every earlier function
+        (<code>save()</code>, etc.) only ever read outer variables like <code>raw</code>; without
+        <code>global</code>, writing to a same-named variable inside a function creates a brand-new
+        local one that vanishes when the function ends, leaving the real outer variable untouched.</li>
+      <li><code>lambda: show_profile("krita")</code> — a tiny, unnamed, throwaway function, needed
+        because <code>command=</code> always calls its target with zero arguments, but
+        <code>show_profile</code> itself needs one (which profile). <code>command=show_profile</code>
+        would fail when clicked; the lambda bridges the gap: "a function that takes nothing, and when
+        called, calls <code>show_profile("krita")</code> with this specific argument already baked
+        in."</li>
+      <li><b>Two separate programs sharing a file, not memory</b> — <code>detect.py</code> and
+        <code>gui.py</code> never talk to each other directly; they only share
+        <code>config.json</code> on disk. <code>detect.py</code> reads that file <b>once</b>, at
+        startup, into its own in-memory copy — so a GUI edit + Save writes to disk correctly, but an
+        already-running <code>detect.py</code> process has no idea it changed, and keeps using its
+        stale copy until restarted (<code>pgrep -af detect.py</code> to find it,
+        <code>kill &lt;pid&gt;</code> to stop it, relaunch or re-login to pick up the change).</li>
+      <li><b>A second, different kind of <code>.desktop</code> file</b> — Lesson 4.2's autostart
+        entry lived in <code>~/.config/autostart/</code>, read automatically at login. A
+        <i>clickable</i> launcher instead lives in <code>~/.local/share/applications/</code>, shows
+        up in the Applications menu, and can be pinned to the XFCE panel (right-click panel →
+        Panel → Add New Items → Launcher → Properties → search by the <code>Name=</code> field).
+        Same file format, same <code>Exec=</code> idea, two different folders for two different
+        purposes — one runs itself, one waits to be clicked.</li>
+    </ul>
+
+    <p class="footnote" style="margin-top:20px">
+      🎉🎉 <b>The tool is complete.</b> Built from nothing: reads raw device events, fires clean
+      keystrokes, maps and tunes the pen, starts on login, has a GUI, and switches behavior per
+      app — genuinely more capable than the vendor software this project set out to replace.
+    </p>
+  </section>
+
+  <div class="divider">
+    <svg class="sigil" width="26" height="26" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1"/>
+      <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1"/>
+      <path d="M14 2 L14 26 M2 14 L26 14 M5 5 L23 23 M23 5 L5 23" stroke="currentColor" stroke-width=".7" opacity=".7"/>
+    </svg>
+  </div>
+
+  <p class="footnote">
+    This grimoire grows with every lesson from here on. Ask Claude to explain any entry further,<br>
+    or to quiz you on a chapter whenever you want a check on retention.
+  </p>
+</div>
+</main>
 
 <script>
 /* ============================================================================
@@ -91,55 +870,174 @@
    status per lesson: "done" | "current" | "todo"
    ==========================================================================*/
 const LEDGER = {
-  updated: "2026-07-18",
-  now: "Lesson 0.1 — meet the terminal",
+  updated: "2026-07-19",
+  now: "🎉 Tutorial complete — all 26 lessons done!",
   milestones: [
-    { id:"M0", title:"Foundations & Setup",
-      goal:"Get comfortable with the terminal and Python, and install our two tools.",
-      lessons:[
-        { id:"0.1", title:"The terminal — your control panel", status:"current" },
-        { id:"0.2", title:"Python: the REPL and your first script", status:"todo" },
-        { id:"0.3", title:"Install our two tools (evdev + xdotool)", status:"todo" },
-        { id:"0.4", title:"Join the input group (read the tablet, no sudo)", status:"todo" },
-        { id:"0.5", title:"Smoke test — prove the tools work", status:"todo" },
-      ]},
-    { id:"M1", title:"Detect button presses",
-      goal:"Open the tablet's Pad and print which express key you pressed.",
-      lessons:[
-        { id:"1.1", title:"What is an input device?", status:"todo" },
-        { id:"1.2", title:"List every input device with evdev", status:"todo" },
-        { id:"1.3", title:"Find & open the tablet's Pad", status:"todo" },
-        { id:"1.4", title:"The event loop — print raw events", status:"todo" },
-        { id:"1.5", title:"Keep only the button presses", status:"todo" },
-        { id:"1.6", title:"Build your key map (physical key → code)", status:"todo" },
-      ]},
-    { id:"M2", title:"Map buttons to shortcuts",
-      goal:"Press a button → fire a real keyboard shortcut via xdotool.",
-      lessons:[
-        { id:"2.1", title:"What is a keystroke? (keys & modifiers)", status:"todo" },
-        { id:"2.2", title:"Drive xdotool by hand", status:"todo" },
-        { id:"2.3", title:"Call xdotool from Python", status:"todo" },
-        { id:"2.4", title:"First shortcut: one button → one keystroke", status:"todo" },
-        { id:"2.5", title:"A dictionary of shortcuts", status:"todo" },
-        { id:"2.6", title:"Move shortcuts into a config file", status:"todo" },
-        { id:"2.7", title:"Press vs release — no double-fire", status:"todo" },
-      ]},
-    { id:"M3", title:"Pen buttons, monitor mapping, pressure",
-      goal:"Wrap xinput/xsetwacom to control the pen itself.",
-      lessons:[
-        { id:"3.1", title:"Meet xinput & xsetwacom", status:"todo" },
-        { id:"3.2", title:"Pen button shortcuts", status:"todo" },
-        { id:"3.3", title:"Map the pen to one monitor", status:"todo" },
-        { id:"3.4", title:"Shape the pressure curve", status:"todo" },
-      ]},
-    { id:"M4", title:"Polish & real-world use",
-      goal:"Make it a tool you actually run every day.",
-      lessons:[
-        { id:"4.1", title:"A friendly config file", status:"todo" },
-        { id:"4.2", title:"Start automatically on login", status:"todo" },
-        { id:"4.3", title:"A tiny GUI", status:"todo" },
-        { id:"4.4", title:"Per-application profiles", status:"todo" },
-      ]},
+    {
+      id: "M0",
+      title: "Foundations & Setup",
+      goal: "Get comfortable with the terminal and Python, and install our two tools.",
+      lessons: [
+        {
+          id: "0.1",
+          title: "The terminal — your control panel",
+          status: "done"
+        },
+        {
+          id: "0.2",
+          title: "Python: the REPL and your first script",
+          status: "done"
+        },
+        {
+          id: "0.3",
+          title: "Install our two tools (evdev + xdotool)",
+          status: "done"
+        },
+        {
+          id: "0.4",
+          title: "Join the input group (read the tablet, no sudo)",
+          status: "done"
+        },
+        {
+          id: "0.5",
+          title: "Smoke test — prove the tools work",
+          status: "done"
+        }
+      ]
+    },
+    {
+      id: "M1",
+      title: "Detect button presses",
+      goal: "Open the tablet's Pad and print which express key you pressed.",
+      lessons: [
+        {
+          id: "1.1",
+          title: "What is an input device?",
+          status: "done"
+        },
+        {
+          id: "1.2",
+          title: "List every input device with evdev",
+          status: "done"
+        },
+        {
+          id: "1.3",
+          title: "Find & open the tablet's Pad",
+          status: "done"
+        },
+        {
+          id: "1.4",
+          title: "The event loop — print raw events",
+          status: "done"
+        },
+        {
+          id: "1.5",
+          title: "Keep only the button presses",
+          status: "done"
+        },
+        {
+          id: "1.6",
+          title: "Build your key map (physical key → code)",
+          status: "done"
+        }
+      ]
+    },
+    {
+      id: "M2",
+      title: "Map buttons to shortcuts",
+      goal: "Press a button → fire a real keyboard shortcut via xdotool.",
+      lessons: [
+        {
+          id: "2.1",
+          title: "What is a keystroke? (keys & modifiers)",
+          status: "done"
+        },
+        {
+          id: "2.2",
+          title: "Drive xdotool by hand",
+          status: "done"
+        },
+        {
+          id: "2.3",
+          title: "Call xdotool from Python",
+          status: "done"
+        },
+        {
+          id: "2.4",
+          title: "First shortcut: one button → one keystroke",
+          status: "done"
+        },
+        {
+          id: "2.5",
+          title: "A dictionary of shortcuts",
+          status: "done"
+        },
+        {
+          id: "2.6",
+          title: "Move shortcuts into a config file",
+          status: "done"
+        },
+        {
+          id: "2.7",
+          title: "Press vs release — no double-fire",
+          status: "done"
+        }
+      ]
+    },
+    {
+      id: "M3",
+      title: "Pen buttons, monitor mapping, pressure",
+      goal: "Wrap xinput/xsetwacom to control the pen itself.",
+      lessons: [
+        {
+          id: "3.1",
+          title: "Meet xinput & xsetwacom",
+          status: "done"
+        },
+        {
+          id: "3.2",
+          title: "Pen button shortcuts",
+          status: "done"
+        },
+        {
+          id: "3.3",
+          title: "Map the pen to one monitor",
+          status: "done"
+        },
+        {
+          id: "3.4",
+          title: "Shape the pressure curve",
+          status: "done"
+        }
+      ]
+    },
+    {
+      id: "M4",
+      title: "Polish & real-world use",
+      goal: "Make it a tool you actually run every day.",
+      lessons: [
+        {
+          id: "4.1",
+          title: "A friendly config file",
+          status: "done"
+        },
+        {
+          id: "4.2",
+          title: "Start automatically on login",
+          status: "done"
+        },
+        {
+          id: "4.3",
+          title: "A tiny GUI",
+          status: "done"
+        },
+        {
+          id: "4.4",
+          title: "Per-application profiles",
+          status: "done"
+        }
+      ]
+    }
   ]
 };
 /* ==========================  end editable block  ========================== */
@@ -155,7 +1053,8 @@ const LEDGER = {
   document.getElementById("barlabel").textContent =
     done + " of " + all.length + " lessons complete (" + pct + "%)";
 
-  const STATUS = { done:"Done", current:"Now", todo:"To do" };
+  const STATUS = { done:"Done", current:"Now", todo:"To do",
+                   parallel:"Parallel", locked:"Locked" };
   const host = document.getElementById("milestones");
   for (const m of LEDGER.milestones){
     const md = m.lessons.filter(l => l.status === "done").length;
@@ -167,15 +1066,98 @@ const LEDGER = {
       '<h2 class="mtitle">' + m.title + '</h2>' +
       '<span class="mcount">' + md + '/' + m.lessons.length + '</span></div>' +
       '<p class="mgoal">' + m.goal + '</p>' +
-      '<ul>' + m.lessons.map(l =>
-        '<li class="' + l.status + '"><span class="dot"></span>' +
-        '<span class="lz"><span class="lid">' + l.id + '</span>' +
-        '<span class="ltitle">' + l.title + '</span>' +
-        (l.note ? '<div class="lnote">' + l.note + '</div>' : '') +
-        '</span><span class="pill">' + STATUS[l.status] + '</span></li>'
-      ).join("") + '</ul>';
+      '<ul class="lessons">' + m.lessons.map(l => {
+        const has = !!(l.review || l.work);
+        return '<li class="' + l.status + (has ? ' hasreview' : '') + '"' +
+          (has ? ' data-lesson="' + l.id + '"' : '') + '>' +
+          '<span class="dot"></span>' +
+          '<span class="lz"><span class="lid">' + l.id + '</span>' +
+          '<span class="ltitle">' + l.title + '</span>' +
+          (l.note ? '<div class="lnote">' + l.note + '</div>' : '') +
+          '</span>' +
+          (has ? '<span class="chev">&#9656;</span>' : '') +
+          '<span class="pill">' + STATUS[l.status] + '</span></li>' +
+          (has ? '<li class="detailrow" data-for="' + l.id + '" style="display:none;padding:0">' +
+                 renderDetail(l) + '</li>' : '');
+      }).join("") + '</ul>';
     host.appendChild(el);
   }
+
+  /* ---- the reviewable record for one lesson ---- */
+  function renderDetail(l){
+    const r = l.review, w = l.work;
+    let h = '<div class="detail" style="flex:1 1 auto">';
+    h += '<h4>Review — Lesson ' + l.id + '</h4>';
+    h += '<p class="when">' + (r && r.date ? 'reviewed ' + r.date : 'work in progress') + '</p>';
+
+    if (w && w.image){
+      const base = '../progress/' + w.folder + '/';
+      h += '<div class="ctrls">' +
+           (w.overlay ? '<button class="tgl" data-ovl="' + l.id + '">Show Claude\'s measurements</button>' : '') +
+           '<a class="tgl" href="' + base + w.image + '" target="_blank">Open full size</a>' +
+           '</div>';
+      h += '<div class="canvasbox" id="cv-' + l.id + '">' +
+           '<img src="' + base + w.image + '" alt="lesson ' + l.id + '">' +
+           (w.overlay ? '<img class="ovl" src="' + base + w.overlay + '" alt="annotations">' : '') +
+           '</div>';
+      if (w.caption) h += '<p class="fnote">' + w.caption + '</p>';
+    }
+
+    if (r && r.caveat)
+      h += '<div class="caveat"><span class="ct">⚠ Baseline integrity</span><p>' + r.caveat + '</p></div>';
+
+    if (r && r.measures && r.measures.length){
+      h += '<h5>Measurements</h5><table class="meas"><tr><th>What</th><th>Yours</th><th>Target</th><th>Note</th></tr>';
+      for (const m of r.measures){
+        const mark = m.ok === true ? '<span class="ok">✓</span> ' : m.ok === false ? '<span class="no">✗</span> ' : '';
+        h += '<tr><td>' + m.what + '</td><td class="v">' + m.got + '</td><td class="v">' + m.target +
+             '</td><td>' + mark + (m.note || '') + '</td></tr>';
+      }
+      h += '</table>';
+    }
+
+    if (r && r.working && r.working.length)
+      h += '<h5>What&rsquo;s working</h5><ul>' + r.working.map(x => '<li>' + x + '</li>').join('') + '</ul>';
+
+    if (r && r.fix){
+      h += '<h5>The one fix — ' + r.fix.title + '</h5><div class="fix"><p>' + r.fix.body + '</p>' +
+           (r.fix.drill ? '<p>' + r.fix.drill + '</p>' : '') + '</div>';
+    }
+
+    if (r && r.forward && r.forward.length)
+      h += '<h5>Carried forward</h5><ul>' + r.forward.map(x => '<li>' + x + '</li>').join('') + '</ul>';
+
+    return h + '</div>';
+  }
+
+  /* ---- expand / collapse + overlay toggle ---- */
+  document.addEventListener('click', function(ev){
+    const tgl = ev.target.closest('.tgl[data-ovl]');
+    if (tgl){
+      const box = document.getElementById('cv-' + tgl.dataset.ovl);
+      const on = box.classList.toggle('show');
+      tgl.classList.toggle('on', on);
+      tgl.textContent = on ? "Hide Claude's measurements" : "Show Claude's measurements";
+      return;
+    }
+    const li = ev.target.closest('li.hasreview');
+    if (!li) return;
+    const row = document.querySelector('li.detailrow[data-for="' + li.dataset.lesson + '"]');
+    const open = row.style.display === 'none';
+    row.style.display = open ? 'flex' : 'none';
+    li.querySelector('.chev').classList.toggle('open', open);
+  });
+})();
+
+/* ---------- tab switching ---------- */
+(function tabs(){
+  const btns = document.querySelectorAll(".tabbtn");
+  btns.forEach(btn => btn.addEventListener("click", () => {
+    btns.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    document.querySelectorAll(".tabpanel").forEach(p => p.classList.remove("active"));
+    document.getElementById("tab-" + btn.dataset.tab).classList.add("active");
+  }));
 })();
 </script>
 </body>

@@ -61,6 +61,13 @@ Make it a tool you actually run every day.
 - **4.3** A tiny GUI
 - **4.4** Per-application profiles
 
+## Studying what you've learned
+
+The **Grimoire** tab in `../ledger/index.html` is a running, parchment-themed reference of every
+command and concept from every lesson so far (and every question you've asked along the way),
+organized by milestone and explained in terms of this project's actual code. Open the ledger and
+click the 📜 Grimoire tab. Look things up anytime, or ask Claude to quiz you on a chapter.
+
 ## Tracking progress
 
 The **ledger** (`../ledger/index.html`) is your dashboard. Open it in a browser to see every
