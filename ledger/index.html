@@ -753,6 +753,99 @@ X-GNOME-Autostart-enabled=true</pre>
         string-vs-number mismatch from Lesson 4.1's config loading, showing up again in a new
         place.</li>
     </ul>
+
+    <h3>Per-application profiles (the finale)</h3>
+    <ul>
+      <li><b>The missing piece: which app is focused right now?</b>
+        <code>xdotool getactivewindow getwindowname</code> gives the focused window's title;
+        <code>xprop -id $(xdotool getactivewindow) WM_CLASS</code> gives the app's "class" — often a
+        cleaner, more stable identifier than the title, since a title changes with the open document
+        but the class usually doesn't. (<code>getwindowclassname</code> looked like it should exist
+        but isn't a real subcommand in this xdotool version — <code>xprop</code> is the working
+        fallback.)</li>
+      <li><b>The same focus problem shows up again, in query form</b> — running a command to check
+        the active window requires clicking back into the terminal to type it, which makes the
+        terminal the active window right when the query fires. Same fix as Lesson 2.2's `xdotool
+        sleep`, just using the shell's own <code>sleep 2 &amp;&amp; ...</code> this time to buy time
+        to click into the real target app first.</li>
+      <li><b>Capturing a program's output instead of just running it</b> —
+        <code>subprocess.run([...], capture_output=True, text=True)</code>. Every earlier
+        <code>subprocess.run</code> call let its target's output go straight to the terminal (or
+        ignored it); <code>capture_output=True</code> redirects it into the returned object instead,
+        and <code>text=True</code> gives you back a normal string rather than raw bytes.
+        <code>result.stdout</code> holds the captured text; <code>.strip()</code> removes the
+        trailing newline nearly every command output has; <code>.lower()</code> avoids
+        capitalization mismatches when matching later. <code>repr(value)</code> — new debugging
+        tool: prints a value with its quotes/escape characters visible, handy for confirming exactly
+        what a string contains (invisible whitespace, etc.) when a plain <code>print</code> wouldn't
+        show it.</li>
+      <li><b>Profiles nest <i>above</i> the existing device split, not instead of it</b> —
+        <code>config.json</code> gained a <code>profiles</code> layer, each profile containing its
+        own full <code>pad_shortcuts</code>/<code>pen_shortcuts</code> (the same shape from Lesson
+        4.1), rather than replacing that structure. <code>monitor</code>/<code>pressure_curve</code>
+        stayed at the top level, outside <code>profiles</code>, since those are pen hardware
+        settings that don't vary by which app is focused.</li>
+      <li><code>pick_profile(name)</code> — loops over every profile name, returns the first whose
+        name appears as a substring inside the active window's name (same <code>in</code>
+        substring-match idea as <code>"Pad" in device.name</code> from Lesson 1.3); falls back to
+        whatever <code>default_profile</code> points to if nothing matched, using
+        <code>.get()</code> twice in a row so a missing/misconfigured default doesn't crash either.</li>
+      <li><b>Rebuilding the shortcuts lookup fresh, on every single key-press</b> — instead of
+        computing one flat <code>SHORTCUTS</code> dict once at startup, the loop now checks the
+        active window and rebuilds <code>pad_map</code>/<code>pen_map</code>/<code>shortcuts</code>
+        every time a key goes down, sourced from whichever profile currently matches. Simple,
+        correct, and — per the lesson's own hint — fast enough not to bother caching yet.</li>
+      <li><b>The Tab-key capitalization gotcha, again</b> — <code>"ctrl+tab"</code> failed with
+        <code>No such key name 'tab'</code>; the real X11/xdotool name is <code>Tab</code> (capital),
+        same category of trap as <code>F4</code> vs. <code>f4</code> back in Lesson 2.6.</li>
+      <li><b>A real "wrong file" mixup</b> — fixed the Tab typo in <code>config.example.json</code>
+        first, tested, and got the exact same error again — because <code>detect.py</code> actually
+        reads <code>config.json</code> (the real, gitignored one), not the example/template. Two
+        files with near-identical names and content are easy to mix up; worth double-checking which
+        one a running program actually loads before concluding a fix didn't work.</li>
+      <li><b>A real regression, caught before it became confusing later</b>: restructuring
+        <code>config.json</code> around <code>profiles</code> silently broke <code>gui.py</code>
+        from Lesson 4.3 — its <code>raw.get("pad_shortcuts", {})</code> now finds nothing, since that
+        key no longer exists at the top level. Fixed by adding profile-switching to the GUI itself
+        (see below). Lesson: restructuring shared data can quietly break a *different* program that
+        also reads it, not just the one you're actively editing.</li>
+      <li><b>Redrawing a GUI instead of building it once</b> — <code>content.winfo_children()</code>
+        returns every widget currently inside a container; looping over them and calling
+        <code>.destroy()</code> removes each one, clearing the display before rebuilding it fresh for
+        a newly-selected profile. Without this, switching profiles would just keep stacking more rows
+        on top of the old ones forever.</li>
+      <li><code>global current_profile</code> — the first time a function needed to
+        <i>reassign</i> an outer variable rather than just read one. Every earlier function
+        (<code>save()</code>, etc.) only ever read outer variables like <code>raw</code>; without
+        <code>global</code>, writing to a same-named variable inside a function creates a brand-new
+        local one that vanishes when the function ends, leaving the real outer variable untouched.</li>
+      <li><code>lambda: show_profile("krita")</code> — a tiny, unnamed, throwaway function, needed
+        because <code>command=</code> always calls its target with zero arguments, but
+        <code>show_profile</code> itself needs one (which profile). <code>command=show_profile</code>
+        would fail when clicked; the lambda bridges the gap: "a function that takes nothing, and when
+        called, calls <code>show_profile("krita")</code> with this specific argument already baked
+        in."</li>
+      <li><b>Two separate programs sharing a file, not memory</b> — <code>detect.py</code> and
+        <code>gui.py</code> never talk to each other directly; they only share
+        <code>config.json</code> on disk. <code>detect.py</code> reads that file <b>once</b>, at
+        startup, into its own in-memory copy — so a GUI edit + Save writes to disk correctly, but an
+        already-running <code>detect.py</code> process has no idea it changed, and keeps using its
+        stale copy until restarted (<code>pgrep -af detect.py</code> to find it,
+        <code>kill &lt;pid&gt;</code> to stop it, relaunch or re-login to pick up the change).</li>
+      <li><b>A second, different kind of <code>.desktop</code> file</b> — Lesson 4.2's autostart
+        entry lived in <code>~/.config/autostart/</code>, read automatically at login. A
+        <i>clickable</i> launcher instead lives in <code>~/.local/share/applications/</code>, shows
+        up in the Applications menu, and can be pinned to the XFCE panel (right-click panel →
+        Panel → Add New Items → Launcher → Properties → search by the <code>Name=</code> field).
+        Same file format, same <code>Exec=</code> idea, two different folders for two different
+        purposes — one runs itself, one waits to be clicked.</li>
+    </ul>
+
+    <p class="footnote" style="margin-top:20px">
+      🎉🎉 <b>The tool is complete.</b> Built from nothing: reads raw device events, fires clean
+      keystrokes, maps and tunes the pen, starts on login, has a GUI, and switches behavior per
+      app — genuinely more capable than the vendor software this project set out to replace.
+    </p>
   </section>
 
   <div class="divider">
@@ -778,7 +871,7 @@ X-GNOME-Autostart-enabled=true</pre>
    ==========================================================================*/
 const LEDGER = {
   updated: "2026-07-19",
-  now: "Lesson 4.4 — Per-application profiles",
+  now: "🎉 Tutorial complete — all 26 lessons done!",
   milestones: [
     {
       id: "M0",
@@ -941,7 +1034,7 @@ const LEDGER = {
         {
           id: "4.4",
           title: "Per-application profiles",
-          status: "current"
+          status: "done"
         }
       ]
     }

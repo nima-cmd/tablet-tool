@@ -1,17 +1,37 @@
 {
-  "pad_shortcuts": {
-    "256": "ctrl+z",
-    "257": "ctrl+shift+z",
-    "258": "b",
-    "259": "e",
-    "260": "ctrl+s",
-    "261": "ctrl+shift+a",
-    "262": "bracketleft",
-    "263": "bracketright"
+  "profiles": {
+    "krita": {
+      "pad_shortcuts": {
+        "256": "ctrl+z",
+        "257": "ctrl+shift+z",
+        "258": "b",
+        "259": "e",
+        "260": "ctrl+s",
+        "261": "ctrl+shift+a",
+        "262": "bracketleft",
+        "263": "bracketright"
+      },
+      "pen_shortcuts": {
+        "332": "click:3"
+      }
+    },
+    "blender": {
+      "pad_shortcuts": {
+        "256": "ctrl+z",
+        "257": "ctrl+shift+z",
+        "258": "ctrl+Tab",
+        "259": "z",
+        "260": "ctrl+s",
+        "261": "alt+a",
+        "262": "bracketleft",
+        "263": "bracketright"
+      },
+      "pen_shortcuts": {
+        "332": "click:3"
+      }
+    }
   },
-  "pen_shortcuts": {
-    "332": "click:3"
-  },
+  "default_profile": "krita",
   "monitor": "DP-0",
   "pressure_curve": [0, 0, 100, 100]
 }
